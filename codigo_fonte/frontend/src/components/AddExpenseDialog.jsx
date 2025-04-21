@@ -16,7 +16,7 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
     const expense = {
       description: formData.get("description"),
       amount: parseFloat(formData.get("amount")),
-      date: formData.get("date"),
+      date: new Date(formData.get("date") + "T00:00:00").toISOString().split("T")[0],
       paymentMethod: formData.get("paymentMethod"),
       //determina o tipo a partir do método selecionado, comparando pelo id
       paymentType: paymentMethods.find(
@@ -56,20 +56,20 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
             />
           </div>
           {isCredit && (
-  <div className="space-y-2">
-    <Label htmlFor="installments">Número de Parcelas</Label>
-    <Input
-      id="installments"
-      name="installments"
-      type="number"
-      min="1"
-      step="1"
-      required
-      placeholder="Ex: 1"
-      className="text-black"
-    />
-  </div>
-)}
+          <div className="space-y-2">
+            <Label htmlFor="installments">Número de Parcelas</Label>
+            <Input
+              id="installments"
+              name="installments"
+              type="number"
+              min="1"
+              step="1"
+              required
+              placeholder="Ex: 1"
+              className="text-black"
+            />
+          </div>
+        )}
 
           <div className="space-y-2">
             <Label htmlFor="date">Data</Label>

@@ -19,8 +19,7 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
   const [selectedMethod, setSelectedMethod] = useState(null);
 
   const filteredExpenses = expenses.filter(expense => {
-    const dateStr = expense.installment_id ? expense.due_date : expense.expense_date;
-    const expenseDate = new Date(dateStr);
+    const expenseDate = expense.installment_id ? expense.due_date : expense.expense_date;  
     return (
       expenseDate.getMonth() === selectedMonth.getMonth() &&
       expenseDate.getFullYear() === selectedMonth.getFullYear()
