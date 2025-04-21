@@ -32,10 +32,25 @@ function Home() {
     })
       .then(response => response.json())
       .then(data => {
-        const expensesParsed = data.map(expense => ({
-          ...expense,
-          amount: parseFloat(expense.amount)
-        }));
+        const expensesParsed = data.map((expense) => {
+          const [year, month, day] = expense.expense_date.split("-");
+          const correctedDate = new Date(year, month - 1, day);
+        
+          let correctedDueDate = null;
+          if (expense.due_date) {
+            const [dueYear, dueMonth, dueDay] = expense.due_date.split("-");
+            correctedDueDate = new Date(dueYear, dueMonth - 1, dueDay);
+          }
+        
+          return {
+            ...expense,
+            amount: parseFloat(expense.amount),
+            expense_date: correctedDate,
+            due_date: correctedDueDate ?? expense.due_date
+          };
+        });
+        
+        
         setExpenses(expensesParsed);
       })
       .catch(error => console.error("Erro ao buscar despesas:", error));
@@ -68,10 +83,25 @@ function Home() {
     })
       .then(response => response.json())
       .then(data => {
-        const expensesParsed = data.map(expense => ({
-          ...expense,
-          amount: parseFloat(expense.amount)
-        }));
+        const expensesParsed = data.map((expense) => {
+          const [year, month, day] = expense.expense_date.split("-");
+          const correctedDate = new Date(year, month - 1, day);
+        
+          let correctedDueDate = null;
+          if (expense.due_date) {
+            const [dueYear, dueMonth, dueDay] = expense.due_date.split("-");
+            correctedDueDate = new Date(dueYear, dueMonth - 1, dueDay);
+          }
+        
+          return {
+            ...expense,
+            amount: parseFloat(expense.amount),
+            expense_date: correctedDate,
+            due_date: correctedDueDate ?? expense.due_date
+          };
+        });
+        
+        
         setExpenses(expensesParsed);
       })
       .catch(error => console.error("Erro ao buscar despesas:", error));
