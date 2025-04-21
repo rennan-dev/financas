@@ -42,7 +42,7 @@ function AddPaymentMethodDialog({ open, onOpenChange, onAddPaymentMethod }) {
       }else {
         window.alert("Erro: " + data.message);
       }
-    } catch (error) {
+    }catch(error) {
       console.error("Erro ao adicionar método de pagamento:", error);
       window.alert("Erro: Ocorreu um erro ao adicionar o método de pagamento.");
     }

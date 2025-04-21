@@ -28,12 +28,12 @@ function Profile() {
           credentials: "include",
         });
         const data = await response.json();
-        if(data.status === "success") {
+        if (data.status === "success") {
           setProfileInfo(data.user);
-        }else {
+        } else {
           window.alert("Erro ao carregar perfil: " + data.message);
         }
-      }catch(error) {
+      } catch (error) {
         console.error("Erro ao carregar perfil:", error);
         window.alert("Erro: Não foi possível carregar os dados do perfil.");
       }
@@ -48,7 +48,7 @@ function Profile() {
     const newPassword = formData.get("newPassword");
     const confirmPassword = formData.get("confirmPassword");
 
-    if(newPassword !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       window.alert("Erro: As novas senhas não coincidem");
       return;
     }
@@ -65,13 +65,13 @@ function Profile() {
         }),
       });
       const data = await response.json();
-      if(data.status === "success") {
+      if (data.status === "success") {
         window.alert("Senha alterada: " + data.message);
         e.target.reset();
-      }else {
+      } else {
         window.alert("Erro: " + data.message);
       }
-    }catch(error) {
+    } catch (error) {
       console.error("Erro ao alterar senha:", error);
       window.alert("Erro: Ocorreu um erro ao alterar a senha.");
     }
@@ -85,15 +85,14 @@ function Profile() {
         credentials: "include",
       });
       const data = await response.json();
-      if(data.status === "success") {
+      if (data.status === "success") {
         window.alert("Conta excluída: " + data.message);
-        // Limpa os dados locais e redireciona para o login
         localStorage.clear();
         navigate("/login");
-      }else {
+      } else {
         window.alert("Erro ao excluir conta: " + data.message);
       }
-    }catch(error) {
+    } catch (error) {
       console.error("Erro ao excluir conta:", error);
       window.alert("Erro: Ocorreu um erro ao excluir a conta.");
     }
@@ -101,85 +100,85 @@ function Profile() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 to-muted px-4 py-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-md mx-auto space-y-8"
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-2xl bg-card/90 backdrop-blur-md border border-border rounded-2xl shadow-xl p-8 space-y-10"
         >
-          <div>
-            <h2 className="text-2xl font-bold">Perfil</h2>
-            <p className="text-muted-foreground">Gerencie suas informações</p>
+          <div className="space-y-2 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">Seu Perfil 👤</h2>
+            <p className="text-muted-foreground text-sm">
+              Visualize seus dados e gerencie sua senha
+            </p>
           </div>
 
-          <div className="space-y-4">
-            {profileInfo ? (
-              <div className="space-y-2">
-                <div>
-                  <Label>Nome</Label>
-                  <p className="text-muted-foreground">{profileInfo.name || "Sem nome"}</p>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Informações do usuário */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Informações Pessoais</h3>
+              {profileInfo ? (
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div>
+                    <Label className="text-foreground">Nome</Label>
+                    <p>{profileInfo.name || "Sem nome"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-foreground">Email</Label>
+                    <p>{profileInfo.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-foreground">Data de Criação</Label>
+                    <p>{profileInfo.created_at}</p>
+                  </div>
                 </div>
-                <div>
-                  <Label>Email</Label>
-                  <p className="text-muted-foreground">{profileInfo.email}</p>
-                </div>
-                <div>
-                  <Label>Data de Criação</Label>
-                  <p className="text-muted-foreground">{profileInfo.created_at}</p>
-                </div>
-              </div>
-            ) : (
-              <p>Carregando perfil...</p>
-            )}
+              ) : (
+                <p>Carregando perfil...</p>
+              )}
+            </div>
 
+            {/* Alteração de senha */}
             <form onSubmit={handlePasswordChange} className="space-y-4">
+              <h3 className="font-semibold text-lg">Alterar Senha</h3>
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">Senha Atual</Label>
-                <Input
-                  id="currentPassword"
-                  name="currentPassword"
-                  type="password"
-                  required
-                />
+                <Input id="currentPassword" name="currentPassword" type="password" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="newPassword">Nova Senha</Label>
-                <Input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  required
-                />
+                <Input id="newPassword" name="newPassword" type="password" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                />
+                <Input id="confirmPassword" name="confirmPassword" type="password" required />
               </div>
-              <Button type="submit">Alterar Senha</Button>
-            </form>
-
-            <div className="pt-6 border-t">
-              <h3 className="text-lg font-semibold text-destructive mb-2">
-                Zona Perigosa
-              </h3>
-              <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
-                Excluir Conta
+              <Button type="submit" className="w-full transition-transform hover:scale-105">
+                Atualizar Senha
               </Button>
-            </div>
+            </form>
+          </div>
+
+          {/* Zona Perigosa */}
+          <div className="pt-6 border-t border-border">
+            <h3 className="text-lg font-semibold text-destructive mb-4">Zona Perigosa ⚠️</h3>
+            <Button
+              variant="destructive"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full"
+            >
+              Excluir Conta
+            </Button>
           </div>
         </motion.div>
 
+        {/* Modal de confirmação */}
         <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Excluir Conta</DialogTitle>
               <DialogDescription>
-                Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.
+                Tem certeza que deseja excluir sua conta? Esta ação é irreversível.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

@@ -8,6 +8,7 @@ import SendRecoveryEmail from "@/pages/SendRecoveryEmail";
 import ResetPassword from "@/pages/ResetPassword";
 import Home from "@/pages/Home";
 import Profile from "@/pages/Profile";
+import Cards from "@/pages/Cards";
 import { RequireAuth } from "@/components/RequireAuth"; 
 
 function App() {
@@ -34,6 +35,15 @@ function App() {
           element={
             <RequireAuth>
               <Profile />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/cards"
+          element={
+            <RequireAuth>
+              <Cards />
             </RequireAuth>
           }
         />
