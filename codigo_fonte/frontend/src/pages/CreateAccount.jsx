@@ -18,12 +18,12 @@ function CreateAccount() {
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
 
-    if(password !== confirmPassword) {
+    if (password !== confirmPassword) {
       window.alert("Erro: As senhas não coincidem");
       return;
     }
 
-    if(!name || !email || !password) {
+    if (!name || !email || !password) {
       window.alert("Erro: Por favor, preencha todos os campos");
       return;
     }
@@ -36,72 +36,56 @@ function CreateAccount() {
         body: JSON.stringify({ name, email, password, confirm_password: confirmPassword }),
       });
       const data = await response.json();
-      if(data.status === "success") {
+      if (data.status === "success") {
         window.alert("Conta criada com sucesso!");
         sessionStorage.setItem("user", JSON.stringify(data.user));
         navigate("/home");
-      }else {
+      } else {
         window.alert("Erro: " + data.message);
       }
-    }catch(error) {
+    } catch (error) {
       console.error("Erro ao criar conta:", error);
       window.alert("Erro: Ocorreu um erro ao criar a conta.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 to-muted px-4">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md p-8 rounded-2xl bg-card/90 shadow-xl backdrop-blur-md border border-border space-y-6"
       >
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">Criar Conta</h1>
-          <p className="text-muted-foreground">
-            Crie sua conta para começar a gerenciar suas finanças
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Criar Conta 📝</h1>
+          <p className="text-muted-foreground text-sm">
+            Comece a gerenciar suas finanças com facilidade
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome</Label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Seu nome"
-              required
-            />
+            <Input id="name" name="name" placeholder="Seu nome" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="seu@email.com"
-              required
-            />
+            <Input id="email" name="email" type="email" placeholder="seu@email.com" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-            />
-          </div>
+  <Label htmlFor="password">Senha</Label>
+  <Input id="password" name="password" type="password" required />
+  <small className="text-xs text-muted-foreground">
+    A senha deve ter no mínimo 6 caracteres e não pode conter espaços.
+  </small>
+</div>
+
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-            />
+            <Input id="confirmPassword" name="confirmPassword" type="password" required />
           </div>
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full transition-transform hover:scale-105">
             Criar Conta
           </Button>
         </form>

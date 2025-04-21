@@ -6,6 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, title, isCredit = false }) {
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState("");
+
+  
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -52,22 +56,21 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
             />
           </div>
           {isCredit && (
-            <div className="space-y-2">
-              <Label htmlFor="installments">Número de Parcelas</Label>
-              <Select name="installments" required defaultValue="1">
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o número de parcelas" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((number) => (
-                    <SelectItem key={number} value={number.toString()}>
-                      {number}x de R$ {(parseFloat(document.getElementById("amount")?.value || 0) / number).toFixed(2)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+  <div className="space-y-2">
+    <Label htmlFor="installments">Número de Parcelas</Label>
+    <Input
+      id="installments"
+      name="installments"
+      type="number"
+      min="1"
+      step="1"
+      required
+      placeholder="Ex: 1"
+      className="text-black"
+    />
+  </div>
+)}
+
           <div className="space-y-2">
             <Label htmlFor="date">Data</Label>
             <Input
@@ -78,20 +81,29 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="paymentMethod">Método de Pagamento</Label>
-            <Select name="paymentMethod" required>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um método" />
-            </SelectTrigger>
-            <SelectContent>
-              {paymentMethods.map((method) => (
-                <SelectItem key={method.id} value={method.id}>
-                  {method.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          </div>
+        <Label htmlFor="paymentMethod">Método de Pagamento</Label>
+        <Select
+          id="paymentMethod"
+          name="paymentMethod"
+          value={selectedPaymentMethod}
+          onValueChange={setSelectedPaymentMethod}
+          required
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Selecione um método" />
+          </SelectTrigger>
+          <SelectContent>
+            {paymentMethods.map((method) => (
+              <SelectItem
+                key={method.id}
+                value={method.id.toString()}
+              >
+                {method.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
           <Button type="submit" className="w-full">
             {isCredit ? "Adicionar Compra Parcelada" : "Adicionar Compra"}
           </Button>

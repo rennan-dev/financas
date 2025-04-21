@@ -1,21 +1,49 @@
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
-function UpdateBalanceDialog({ open, onOpenChange, currentBalance, methodName, selectedMethodId, onUpdateBalance, paymentMethods }) {
+function UpdateBalanceDialog({
+  open,
+  onOpenChange,
+  currentBalance,
+  selectedMethodId,
+  onUpdateBalance,
+  paymentMethods,
+}) {
+  // <-- sem <string> aqui
+  const [method, setMethod] = useState(
+    selectedMethodId ? selectedMethodId.toString() : ""
+  );
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const newBalance = parseFloat(formData.get("balance"));
-    const paymentMethodId = parseInt(formData.get("method"), 10);
+    if (!method) return; // só continua se escolheu algo
+
+    // e.currentTarget é o <form>
+    const formData = new FormData(e.currentTarget);
+    const balanceValue = formData.get("balance");
+    const newBalance = parseFloat(balanceValue || "0");
+    const paymentMethodId = parseInt(method, 10);
+
     onUpdateBalance(paymentMethodId, newBalance);
     onOpenChange(false);
   };
 
-  const debitMethods = paymentMethods.filter(m => m.type !== 'credit');
+  const debitMethods = paymentMethods.filter((m) => m.type !== "credit");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -26,19 +54,26 @@ function UpdateBalanceDialog({ open, onOpenChange, currentBalance, methodName, s
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="method">Instituição</Label>
-            <Select name="method" required defaultValue={selectedMethodId ? selectedMethodId.toString() : ""}>
-              <SelectTrigger>
+            <Select
+              id="method"
+              name="method"
+              value={method}
+              onValueChange={setMethod}
+              required
+            >
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione a conta" />
               </SelectTrigger>
               <SelectContent>
-                {debitMethods.map((method) => (
-                  <SelectItem key={method.id} value={method.id.toString()}>
-                    {method.name}
+                {debitMethods.map((m) => (
+                  <SelectItem key={m.id} value={m.id.toString()}>
+                    {m.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="balance">Novo Saldo</Label>
             <Input
@@ -51,7 +86,8 @@ function UpdateBalanceDialog({ open, onOpenChange, currentBalance, methodName, s
               placeholder="0.00"
             />
           </div>
-          <Button type="submit" className="w-full">
+
+          <Button type="submit" className="w-full" disabled={!method}>
             Atualizar Saldo
           </Button>
         </form>

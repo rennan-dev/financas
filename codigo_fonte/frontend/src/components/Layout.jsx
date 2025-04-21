@@ -40,7 +40,12 @@ function Layout({ children }) {
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary">Finanças Pessoais</h1>
+          <h1
+            className="text-2xl font-bold text-primary cursor-pointer"
+            onClick={() => navigate("/home")}
+          >
+            Finanças Pessoais
+          </h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2">
@@ -51,6 +56,9 @@ function Layout({ children }) {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => navigate("/profile")}>
                 Perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/cards")}>
+                Cartões
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>
                 Sair

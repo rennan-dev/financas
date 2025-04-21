@@ -209,20 +209,14 @@ function Home() {
     }
   };
   
-  const handleAddPaymentMethod = (method) => {
-    const newMethod = {
-      ...method,
-      id: Date.now().toString(),
-      name: `${method.name} (${method.type === 'credit' ? 'Crédito' : method.type === 'debit' ? 'Débito' : 'Dinheiro'})`,
-      balance: method.type !== 'credit' ? 0 : undefined
-    };
-
-    setPaymentMethods([...paymentMethods, newMethod]);
+  const handleAddPaymentMethod = () => {
+    fetchPaymentMethods(); // Atualiza da API
     toast({
       title: "Método de pagamento adicionado",
       description: "O método de pagamento foi registrado com sucesso!"
     });
   };
+  
 
   const handleUpdateBalance = async (paymentMethodId, newBalance) => {
     const user = JSON.parse(sessionStorage.getItem("user"));
@@ -332,50 +326,68 @@ function Home() {
   
   return (
     <Layout>
-      <div className="container mx-auto p-4">
-        <div className="flex justify-end gap-2 mb-8">
-          <Button
-            onClick={() => setShowAddPaymentMethod(true)}
-            variant="outline"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Método
-          </Button>
-          <Button onClick={() => setShowAddExpense(true)} variant="secondary">
-            <Plus className="w-4 h-4 mr-2" />
-            Compra no Débito
-          </Button>
-          <Button onClick={() => setShowAddCreditExpense(true)} variant="secondary">
-            <Plus className="w-4 h-4 mr-2" />
-            Compra no Crédito
-          </Button>
+      <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-primary/20 to-muted px-4 py-10">
+        <div className="w-full max-w-6xl space-y-10">
+          <div className="flex flex-wrap justify-between gap-4 items-center">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              Painel Financeiro 📊
+            </h1>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => setShowAddPaymentMethod(true)}
+                variant="outline"
+                className="backdrop-blur-md"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Método
+              </Button>
+              <Button
+                onClick={() => setShowAddExpense(true)}
+                variant="secondary"
+                className="backdrop-blur-md"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Compra no Débito
+              </Button>
+              <Button
+                onClick={() => setShowAddCreditExpense(true)}
+                variant="secondary"
+                className="backdrop-blur-md"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Compra no Crédito
+              </Button>
+            </div>
+          </div>
+  
+          <div className="bg-card/90 backdrop-blur-md border border-border rounded-xl shadow-md p-6">
+            <Dashboard
+              expenses={expenses}
+              paymentMethods={paymentMethods}
+              totalBalance={getTotalBalance()}
+              onUpdateBalance={handleUpdateBalance}
+              onPayCreditExpense={onPayCreditExpense}
+            />
+          </div>
         </div>
-
-        <Dashboard
-          expenses={expenses}
-          paymentMethods={paymentMethods}
-          totalBalance={getTotalBalance()}
-          onUpdateBalance={handleUpdateBalance}
-          onPayCreditExpense={onPayCreditExpense}
-        />
-
+  
         <AddExpenseDialog
           open={showAddExpense}
           onOpenChange={setShowAddExpense}
           onAddExpense={handleAddExpense}
-          paymentMethods={paymentMethods.filter(m => m.type !== 'credit')}
+          paymentMethods={paymentMethods.filter((m) => m.type !== "credit")}
           title="Adicionar Compra no Débito"
         />
-
+  
         <AddExpenseDialog
           open={showAddCreditExpense}
           onOpenChange={setShowAddCreditExpense}
           onAddExpense={handleAddRecurringExpense}
-          paymentMethods={paymentMethods.filter(m => m.type === 'credit')}
+          paymentMethods={paymentMethods.filter((m) => m.type === "credit")}
           title="Adicionar Compra no Crédito"
           isCredit={true}
         />
-
+  
         <AddPaymentMethodDialog
           open={showAddPaymentMethod}
           onOpenChange={setShowAddPaymentMethod}
@@ -383,7 +395,7 @@ function Home() {
         />
       </div>
     </Layout>
-  );
+  );  
 }
 
 export default Home;
