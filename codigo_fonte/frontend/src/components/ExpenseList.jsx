@@ -1,16 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { Repeat } from "lucide-react";
-// Removidos 'Button' e 'Select' pois não são mais usados aqui
-// import { Button } from "@/components/ui/button";
-// import { ...Select... } from "@/components/ui/select";
+import { Repeat, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-// MUDANÇA: Removido 'onPayCreditExpense' e 'debitMethods' das props
-function ExpenseList({ expenses }) {
-  // Removido o estado 'selectedPaymentMethod' pois não é mais usado
-  // const [selectedPaymentMethod, setSelectedPaymentMethod] = useState({});
+function ExpenseList({ expenses, onEdit, onDelete }) { 
 
   const getPaymentTypeLabel = (type) => {
     if (type === "credit") return "Crédito";
@@ -26,51 +27,39 @@ function ExpenseList({ expenses }) {
         </div>
       ) : (
         expenses.map((expense, index) => {
-          //... (lógica de variáveis permanece a mesma)
           const isInstallment = expense.installment_id != null;
           const totalAmount = parseFloat(expense.total_amount || "0");
-          const installmentAmount = parseFloat(
-            expense.installment_amount || "0"
-          );
+          const installmentAmount = parseFloat(expense.installment_amount || "0");
           const displayAmount = isInstallment ? installmentAmount : totalAmount;
           const fullAmount = isInstallment ? totalAmount : null;
           const isRecurring = Number(expense.is_recurring) === 1;
-          // const expensePaid = Number(expense.expense_paid) === 1; // Não é mais usado
-          // const installmentPaid = Number(expense.installment_paid) === 1; // Não é mais usado
-          // const isPaid = isInstallment ? installmentPaid : expensePaid; // Não é mais usado
 
-          const displayDate = isInstallment
-            ? expense.due_date
-            : expense.expense_date;
+          const displayDate = isInstallment ? expense.due_date : expense.expense_date;
           const paymentMethodName = expense.payment_method_name || "";
-          const payId = isInstallment
-            ? expense.installment_id
-            : expense.expense_id;
+          
+          const uniqueKey = isInstallment ? `inst-${expense.installment_id}` : `exp-${expense.expense_id}`;
 
           return (
             <motion.div
-              key={payId}
+              key={uniqueKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-lg bg-card border"
+              className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-lg bg-card border relative"
             >
-              <div>
+              {/* Informações da Esquerda */}
+              <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium">{expense.description}</h3>
                   {isRecurring && (
                     <Repeat className="h-4 w-4 text-muted-foreground" />
                   )}
                 </div>
-                {/* Exibe a data */}
                 <p className="text-sm text-muted-foreground">
                   {format(new Date(displayDate), "dd 'de' MMMM 'de' yyyy", {
                     locale: ptBR,
                   })}
                 </p>
-                
-                {/* MUDANÇA: Bloco "Pagamento:" foi removido daqui */}
-
                 <p className="text-sm text-muted-foreground">
                   {paymentMethodName}
                   {isInstallment && Number(expense.total_installments) > 1 && (
@@ -87,7 +76,9 @@ function ExpenseList({ expenses }) {
                   )}
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 w-full sm:w-auto text-right sm:text-left">
+
+              {/* Informações da Direita (Valor e Badge) */}
+              <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
                 <div className="text-right">
                   <span className="font-semibold">
                     R$ {displayAmount.toFixed(2)}
@@ -99,10 +90,6 @@ function ExpenseList({ expenses }) {
                   )}
                 </div>
 
-                {/* MUDANÇA: Bloco de Pagar (Select + Button) foi totalmente removido */}
-                {/* {expense.payment_type === "credit" && !isPaid && ( ... )} */}
-
-                {/* MUDANÇA: Lógica de status trocada para Crédito/Débito */}
                 {expense.payment_type === "credit" ? (
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     Crédito
@@ -112,6 +99,43 @@ function ExpenseList({ expenses }) {
                     Débito
                   </span>
                 )}
+
+                {/* MENU DE AÇÕES */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Abrir menu</span>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    
+                    {/* Botão Editar */}
+                    <DropdownMenuItem 
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        onEdit(expense);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      <span>Editar</span>
+                    </DropdownMenuItem>
+
+                    {/* Botão Excluir */}
+                    <DropdownMenuItem 
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        onDelete(expense);
+                      }}
+                      className="text-red-600 focus:text-red-600 cursor-pointer"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Excluir</span>
+                    </DropdownMenuItem>
+
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </motion.div>
           );

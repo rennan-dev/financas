@@ -13,7 +13,7 @@ import ExpenseList from "@/components/ExpenseList";
 import MonthSelector from "@/components/MonthSelector";
 import UpdateBalanceDialog from "@/components/UpdateBalanceDialog";
 
-function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, onPayCreditExpense }) {
+function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, onEditExpense, onDeleteExpense }) {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [showUpdateBalance, setShowUpdateBalance] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
@@ -160,9 +160,12 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
                 onMonthChange={setSelectedMonth}
               />
             </div>
+            
             <ExpenseList
               expenses={filteredExpenses}
               debitMethods={paymentMethods.filter((m) => m.type !== "credit")}
+              onEdit={onEditExpense}
+              onDelete={onDeleteExpense}
             />
           </motion.div>
         </div>
