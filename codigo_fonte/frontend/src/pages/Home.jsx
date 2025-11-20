@@ -7,6 +7,7 @@ import AddExpenseDialog from "@/components/AddExpenseDialog";
 import AddPaymentMethodDialog from "@/components/AddPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import EditExpenseDialog from "@/components/EditExpenseDialog";
 
 function Home() {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ function Home() {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddPaymentMethod, setShowAddPaymentMethod] = useState(false);
   const [showAddCreditExpense, setShowAddCreditExpense] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [expenseToEdit, setExpenseToEdit] = useState(null);
 
   useEffect(() => {
     const user = sessionStorage.getItem("user");
@@ -130,61 +133,58 @@ function Home() {
       .catch(error => console.error("Erro ao buscar métodos de pagamento:", error));
   };
 
-const handleAddExpense = async (expense) => {
-  const user = JSON.parse(sessionStorage.getItem("user"));
-  if (!user) {
-    console.error("Usuário não encontrado na sessão");
-    return;
-  }
+  const handleAddExpense = async (expense) => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) {
+      console.error("Usuário não encontrado na sessão");
+      return;
+    }
 
-  const body = {
-    user_id: user.id,
-    payment_method_id: expense.paymentMethod,
-    description: expense.description,
-    amount: expense.amount,
-    date: expense.date,
-    installments: expense.installments,
-    payment_type: 'debit',
-  };
+    const body = {
+      user_id: user.id,
+      payment_method_id: expense.paymentMethod,
+      description: expense.description,
+      amount: expense.amount,
+      date: expense.date,
+      installments: expense.installments,
+      payment_type: 'debit',
+    };
 
-  try {
-    const response = await fetch("http://localhost/api_financas/addExpense.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-    console.log(data);
-
-    if (data.status === "success") {
-      // Atualiza as listagens
-      fetchExpenses();
-      fetchPaymentMethods();
-
-      toast({
-        title: "Compra registrada!",
-        description: "A compra foi adicionada com sucesso.",
+    try {
+      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
       });
-    } else {
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        // Atualiza as listagens
+        fetchExpenses();
+        fetchPaymentMethods();
+
+        toast({
+          title: "Compra registrada!",
+          description: "A compra foi adicionada com sucesso.",
+        });
+      } else {
+        toast({
+          title: "Erro ao registrar compra",
+          description: data.message || "Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar despesa:", error);
       toast({
-        title: "Erro ao registrar compra",
-        description: data.message || "Tente novamente.",
+        title: "Erro no servidor",
+        description: "Não foi possível registrar a compra.",
         variant: "destructive",
       });
     }
-  } catch (error) {
-    console.error("Erro ao adicionar despesa:", error);
-    toast({
-      title: "Erro no servidor",
-      description: "Não foi possível registrar a compra.",
-      variant: "destructive",
-    });
-  }
-};
-
-
+  };
 
   const handleAddRecurringExpense = async (expense) => {
     const user = JSON.parse(sessionStorage.getItem("user"));
@@ -250,29 +250,27 @@ const handleAddExpense = async (expense) => {
       description: "O método de pagamento foi registrado com sucesso!",
     });
   };
-const handleUpdateBalance = async (paymentMethodId, newBalance) => {
-  const user = JSON.parse(sessionStorage.getItem("user"));
-  if (!user) return;
 
-  const success = await updateBalance(user.id, paymentMethodId, newBalance);
+  const handleUpdateBalance = async (paymentMethodId, newBalance) => {
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      if (!user) return;
 
-  if (success) {
-    // Atualiza o método localmente
-    setPaymentMethods((prevMethods) =>
-      prevMethods.map((method) =>
-        method.id === paymentMethodId
-          ? { ...method, balance: newBalance }
-          : method
-      )
-    );
+      const success = await updateBalance(user.id, paymentMethodId, newBalance);
 
-    // Recarrega os métodos do backend para garantir sincronização
-    fetchPaymentMethods();
-  }
-};
+      if (success) {
+        // Atualiza o método localmente
+        setPaymentMethods((prevMethods) =>
+          prevMethods.map((method) =>
+            method.id === paymentMethodId
+              ? { ...method, balance: newBalance }
+              : method
+          )
+        );
 
-
-
+        // Recarrega os métodos do backend para garantir sincronização
+        fetchPaymentMethods();
+      }
+  };
 
   const getTotalBalance = () => {
     return paymentMethods.reduce(
@@ -357,6 +355,117 @@ const handleUpdateBalance = async (paymentMethodId, newBalance) => {
     }
   };
 
+  const handleEditExpense = (expense) => {
+    setExpenseToEdit(expense);
+    setShowEditDialog(true);
+  };
+
+  const handleSaveEditedExpense = async (updatedExpense) => {
+
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) return;
+
+    const payload = {
+        user_id: user.id,
+        expense_id: updatedExpense.expense_id || updatedExpense.id,
+        description: updatedExpense.description,
+        amount: updatedExpense.amount,
+        date: updatedExpense.date,
+        payment_method_id: updatedExpense.payment_method_id,
+        payment_type: updatedExpense.payment_type
+    };
+
+    try {
+      const response = await fetch("http://localhost/api_financas/updateExpense.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+         console.error("Erro HTTP:", response.status, response.statusText);
+         throw new Error(`Erro no servidor: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        toast({
+          title: "Sucesso!",
+          description: "Despesa atualizada.",
+        });
+        
+        fetchExpenses();
+        fetchPaymentMethods();
+        setShowEditDialog(false);
+      } else {
+        toast({
+          title: "Erro ao salvar",
+          description: data.message || "Ocorreu um erro desconhecido.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro Catastrófico:", error);
+      toast({ 
+          title: "Erro de Conexão", 
+          description: error.message, 
+          variant: "destructive" 
+      });
+    }
+  };
+
+  const handleDeleteExpense = async (expense) => {
+    const confirmDelete = window.confirm(
+      `Tem certeza que deseja excluir a despesa: "${expense.description}"?\n\nSe foi no Débito, o valor será devolvido ao saldo.`
+    );
+    
+    if (!confirmDelete) return;
+
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) return;
+
+    const expenseIdToDelete = expense.expense_id || expense.id;
+
+    try {
+      const response = await fetch("http://localhost/api_financas/deleteExpense.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          user_id: user.id,
+          expense_id: expenseIdToDelete
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        toast({
+          title: "Despesa Excluída",
+          description: "O registro foi apagado com sucesso.",
+        });
+
+        fetchExpenses();
+        fetchPaymentMethods();
+      } else {
+        toast({
+          title: "Erro ao excluir",
+          description: data.message || "Erro desconhecido.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível comunicar com o servidor.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-primary/20 to-muted px-4 py-10">
@@ -400,6 +509,8 @@ const handleUpdateBalance = async (paymentMethodId, newBalance) => {
               totalBalance={getTotalBalance()}
               onUpdateBalance={handleUpdateBalance}
               onPayCreditExpense={onPayCreditExpense}
+              onEditExpense={handleEditExpense} 
+              onDeleteExpense={handleDeleteExpense}
             />
           </div>
         </div>
@@ -425,6 +536,14 @@ const handleUpdateBalance = async (paymentMethodId, newBalance) => {
           open={showAddPaymentMethod}
           onOpenChange={setShowAddPaymentMethod}
           onAddPaymentMethod={handleAddPaymentMethod}
+        />
+
+        <EditExpenseDialog 
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSave={handleSaveEditedExpense}
+          paymentMethods={paymentMethods}
+          expense={expenseToEdit}
         />
       </div>
     </Layout>

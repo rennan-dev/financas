@@ -76,12 +76,6 @@ function Login() {
           </Button>
         </form>
         <div className="text-center space-y-2">
-          <Link
-            to="/forgot-password"
-            className="text-sm text-primary hover:underline"
-          >
-            Esqueceu sua senha?
-          </Link>
           <p className="text-sm text-muted-foreground">
             Não tem uma conta?{" "}
             <Link

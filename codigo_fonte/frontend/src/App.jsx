@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import Login from "@/pages/Login";
 import CreateAccount from "@/pages/CreateAccount";
-import ForgotPassword from "@/pages/ForgotPassword";
 import SendRecoveryEmail from "@/pages/SendRecoveryEmail";
 import ResetPassword from "@/pages/ResetPassword";
 import Home from "@/pages/Home";
@@ -17,7 +16,6 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/create-account" element={<CreateAccount />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/recovery-email-sent" element={<SendRecoveryEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         
