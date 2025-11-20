@@ -8,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, title, isCredit = false }) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState("");
 
-  
-
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -18,12 +16,10 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
       amount: parseFloat(formData.get("amount")),
       date: new Date(formData.get("date") + "T00:00:00").toISOString().split("T")[0],
       paymentMethod: formData.get("paymentMethod"),
-      //determina o tipo a partir do método selecionado, comparando pelo id
-      paymentType: paymentMethods.find(
-        (m) => m.id === parseInt(formData.get("paymentMethod"))
-      ).type,
-      installments: isCredit ? parseInt(formData.get("installments")) : 1
+      // installments: isCredit ? parseInt(formData.get("installments")) : 1 // <-- ANTIGO
+      installments: 1, // <-- MUDANÇA: Como o campo foi removido, enviamos 1
     };
+
     onAddExpense(expense);
     onOpenChange(false);
   };
@@ -45,7 +41,8 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor Total</Label>
+            {/* // <-- MUDANÇA: Label alterada */}
+            <Label htmlFor="amount">Valor</Label> 
             <Input
               id="amount"
               name="amount"
@@ -55,21 +52,9 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
               placeholder="0.00"
             />
           </div>
-          {isCredit && (
-          <div className="space-y-2">
-            <Label htmlFor="installments">Número de Parcelas</Label>
-            <Input
-              id="installments"
-              name="installments"
-              type="number"
-              min="1"
-              step="1"
-              required
-              placeholder="Ex: 1"
-              className="text-black"
-            />
-          </div>
-        )}
+
+          {/* // <-- MUDANÇA: Bloco de parcelas removido */}
+          {/* {isCredit && ( ... )} */}
 
           <div className="space-y-2">
             <Label htmlFor="date">Data</Label>
@@ -81,31 +66,32 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
             />
           </div>
           <div className="space-y-2">
-        <Label htmlFor="paymentMethod">Método de Pagamento</Label>
-        <Select
-          id="paymentMethod"
-          name="paymentMethod"
-          value={selectedPaymentMethod}
-          onValueChange={setSelectedPaymentMethod}
-          required
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione um método" />
-          </SelectTrigger>
-          <SelectContent>
-            {paymentMethods.map((method) => (
-              <SelectItem
-                key={method.id}
-                value={method.id.toString()}
-              >
-                {method.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+            <Label htmlFor="paymentMethod">Método de Pagamento</Label>
+            <Select
+              id="paymentMethod"
+              name="paymentMethod"
+              value={selectedPaymentMethod}
+              onValueChange={setSelectedPaymentMethod}
+              required
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione um método" />
+              </SelectTrigger>
+              <SelectContent>
+                {paymentMethods.map((method) => (
+                  <SelectItem
+                    key={method.id}
+                    value={method.id.toString()}
+                  >
+                    {method.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button type="submit" className="w-full">
-            {isCredit ? "Adicionar Compra Parcelada" : "Adicionar Compra"}
+            {/* // <-- MUDANÇA: Lógica do botão simplificada */}
+            Adicionar Compra
           </Button>
         </form>
       </DialogContent>

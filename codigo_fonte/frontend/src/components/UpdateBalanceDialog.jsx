@@ -24,16 +24,14 @@ function UpdateBalanceDialog({
   onUpdateBalance,
   paymentMethods,
 }) {
-  // <-- sem <string> aqui
   const [method, setMethod] = useState(
     selectedMethodId ? selectedMethodId.toString() : ""
   );
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!method) return; // só continua se escolheu algo
+    if (!method) return;
 
-    // e.currentTarget é o <form>
     const formData = new FormData(e.currentTarget);
     const balanceValue = formData.get("balance");
     const newBalance = parseFloat(balanceValue || "0");
@@ -43,7 +41,8 @@ function UpdateBalanceDialog({
     onOpenChange(false);
   };
 
-  const debitMethods = paymentMethods.filter((m) => m.type !== "credit");
+  // Agora mostra todos os métodos
+  const allMethods = paymentMethods;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,10 +61,10 @@ function UpdateBalanceDialog({
               required
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione a conta" />
+                <SelectValue placeholder="Selecione o cartão" />
               </SelectTrigger>
               <SelectContent>
-                {debitMethods.map((m) => (
+                {allMethods.map((m) => (
                   <SelectItem key={m.id} value={m.id.toString()}>
                     {m.name}
                   </SelectItem>

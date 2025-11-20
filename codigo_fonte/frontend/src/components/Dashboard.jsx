@@ -162,7 +162,6 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
             </div>
             <ExpenseList
               expenses={filteredExpenses}
-              onPayCreditExpense={onPayCreditExpense}
               debitMethods={paymentMethods.filter((m) => m.type !== "credit")}
             />
           </motion.div>
