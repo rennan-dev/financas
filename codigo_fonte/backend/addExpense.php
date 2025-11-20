@@ -5,9 +5,11 @@ header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json");
+date_default_timezone_set('America/Manaus');
 
 include 'config.php';
 
+// Lê o JSON vindo do front-end
 $data = json_decode(file_get_contents('php://input'), true);
 
 $user_id = $data['user_id'];
@@ -21,6 +23,7 @@ $installments = isset($data['installments']) ? intval($data['installments']) : 1
 
 $paid = 0;
 
+// Insere na tabela expenses
 $stmt = $conn->prepare("
   INSERT INTO expenses 
     (user_id, payment_method_id, description, amount, date, payment_type, is_recurring, paid)
@@ -42,22 +45,27 @@ $stmt->execute();
 $expense_id = $stmt->insert_id;
 $stmt->close();
 
-if($payment_type !== 'credit') {
+// Se o pagamento não for de crédito, marque como pago e atualize o saldo
+if ($payment_type !== 'credit') {
+    // Atualiza o saldo do método de pagamento, subtraindo o valor da compra
     $stmt2 = $conn->prepare("UPDATE payment_methods SET balance = balance - ? WHERE id = ?");
     $stmt2->bind_param("di", $amount, $payment_method_id);
     $stmt2->execute();
     $stmt2->close();
 
+    // Marca a despesa como paga e associa o id do método utilizado
     $stmt3 = $conn->prepare("UPDATE expenses SET paid = 1, paid_with_method_id = ? WHERE id = ?");
     $stmt3->bind_param("ii", $payment_method_id, $expense_id);
     $stmt3->execute();
     $stmt3->close();
 }
 
-if($payment_type === 'credit' && $installments > 1) {
+// Se for compra parcelada (crédito com mais de 1 parcela), insere as parcelas
+if ($payment_type === 'credit' && $installments > 1) {
   $installment_amount = $amount / $installments;
   
-  for($i = 1; $i <= $installments; $i++) {
+  for ($i = 1; $i <= $installments; $i++) {
+    // Calcula a data de vencimento de cada parcela
     $due_date = date('Y-m-d', strtotime("+".($i-1)." month", strtotime($date)));
     
     $stmt4 = $conn->prepare("
@@ -78,6 +86,7 @@ if($payment_type === 'credit' && $installments > 1) {
   }
 }
 
+// Cria um objeto com os dados da despesa para retorno
 $expense_return = [
   "id" => $expense_id,
   "user_id" => $user_id,

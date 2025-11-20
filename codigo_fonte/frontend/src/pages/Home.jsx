@@ -19,89 +19,89 @@ function Home() {
 
   useEffect(() => {
     const user = sessionStorage.getItem("user");
-    if(!user) {
+    if (!user) {
       navigate("/login");
       return;
     }
+
     const userObj = JSON.parse(user);
-    const user_id = userObj.id; 
-  
+    const user_id = userObj.id;
+
+    // Buscar despesas
     fetch(`http://localhost/api_financas/getExpenses.php?user_id=${user_id}`, {
       method: "GET",
       credentials: "include",
     })
       .then(response => response.json())
       .then(data => {
-        const expensesParsed = data.map((expense) => {
+        const expensesParsed = data.map(expense => {
           const [year, month, day] = expense.expense_date.split("-");
           const correctedDate = new Date(year, month - 1, day);
-        
+
           let correctedDueDate = null;
           if (expense.due_date) {
             const [dueYear, dueMonth, dueDay] = expense.due_date.split("-");
             correctedDueDate = new Date(dueYear, dueMonth - 1, dueDay);
           }
-        
+
           return {
             ...expense,
             amount: parseFloat(expense.amount),
             expense_date: correctedDate,
-            due_date: correctedDueDate ?? expense.due_date
+            due_date: correctedDueDate ?? expense.due_date,
           };
         });
-        
-        
         setExpenses(expensesParsed);
       })
       .catch(error => console.error("Erro ao buscar despesas:", error));
 
+    // Buscar métodos de pagamento
     fetch(`http://localhost/api_financas/getPaymentMethods.php?user_id=${user_id}`, {
       method: "GET",
       credentials: "include",
     })
-    .then(response => response.json())
-    .then(data => {
-      if(data.status === "success") {
-        const methods = data.paymentMethods.map(method => ({
-          ...method,
-          balance: parseFloat(method.balance)
-        }));
-        setPaymentMethods(methods);
-      }else {
-        console.error("Erro:", data.message);
-      }
-    })
-    .catch(error => console.error("Erro ao buscar métodos de pagamento:", error));
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "success") {
+          const methods = data.paymentMethods.map(method => ({
+            ...method,
+            balance: parseFloat(method.balance || 0),
+          }));
+          setPaymentMethods(methods);
+        } else {
+          console.error("Erro:", data.message);
+        }
+      })
+      .catch(error => console.error("Erro ao buscar métodos de pagamento:", error));
   }, [navigate]);
-  
+
   const fetchExpenses = () => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    if(!user) return;
+    if (!user) return;
+
     fetch(`http://localhost/api_financas/getExpenses.php?user_id=${user.id}`, {
       method: "GET",
       credentials: "include",
     })
       .then(response => response.json())
       .then(data => {
-        const expensesParsed = data.map((expense) => {
+        const expensesParsed = data.map(expense => {
           const [year, month, day] = expense.expense_date.split("-");
           const correctedDate = new Date(year, month - 1, day);
-        
+
           let correctedDueDate = null;
           if (expense.due_date) {
             const [dueYear, dueMonth, dueDay] = expense.due_date.split("-");
             correctedDueDate = new Date(dueYear, dueMonth - 1, dueDay);
           }
-        
+
           return {
             ...expense,
             amount: parseFloat(expense.amount),
             expense_date: correctedDate,
-            due_date: correctedDueDate ?? expense.due_date
+            due_date: correctedDueDate ?? expense.due_date,
           };
         });
-        
-        
         setExpenses(expensesParsed);
       })
       .catch(error => console.error("Erro ao buscar despesas:", error));
@@ -109,45 +109,107 @@ function Home() {
 
   const fetchPaymentMethods = () => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    if(!user) return;
+    if (!user) return;
+
     fetch(`http://localhost/api_financas/getPaymentMethods.php?user_id=${user.id}`, {
       method: "GET",
       credentials: "include",
     })
       .then(response => response.json())
       .then(data => {
-        if(data.status === "success") {
+        if (data.status === "success") {
           const methods = data.paymentMethods.map(method => ({
             ...method,
-            balance: parseFloat(method.balance)
+            balance: parseFloat(method.balance || 0),
           }));
           setPaymentMethods(methods);
-        }else {
+        } else {
           console.error("Erro:", data.message);
         }
       })
       .catch(error => console.error("Erro ao buscar métodos de pagamento:", error));
   };
-  
 
-  const handleAddExpense = async (expense) => {
+const handleAddExpense = async (expense) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  if (!user) {
+    console.error("Usuário não encontrado na sessão");
+    return;
+  }
+
+  const body = {
+    user_id: user.id,
+    payment_method_id: expense.paymentMethod,
+    description: expense.description,
+    amount: expense.amount,
+    date: expense.date,
+    installments: expense.installments,
+    payment_type: 'debit',
+  };
+
+  try {
+    const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    console.log(data);
+
+    if (data.status === "success") {
+      // Atualiza as listagens
+      fetchExpenses();
+      fetchPaymentMethods();
+
+      toast({
+        title: "Compra registrada!",
+        description: "A compra foi adicionada com sucesso.",
+      });
+    } else {
+      toast({
+        title: "Erro ao registrar compra",
+        description: data.message || "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  } catch (error) {
+    console.error("Erro ao adicionar despesa:", error);
+    toast({
+      title: "Erro no servidor",
+      description: "Não foi possível registrar a compra.",
+      variant: "destructive",
+    });
+  }
+};
+
+
+
+  const handleAddRecurringExpense = async (expense) => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    if(!user) return;
-  
+    if (!user) return;
+
     const selectedMethod = paymentMethods.find(
       (m) => m.id === parseInt(expense.paymentMethod)
     );
-  
+
+    if (!selectedMethod) {
+      console.error("Método de pagamento não encontrado");
+      return;
+    }
+
     const payload = {
       user_id: user.id,
       payment_method_id: selectedMethod.id,
       description: expense.description,
       amount: expense.amount,
       date: expense.date,
-      payment_type: selectedMethod.type, 
       is_recurring: false,
+      installments: expense.installments,
+      payment_type: 'credit',
     };
-  
+
     try {
       const response = await fetch("http://localhost/api_financas/addExpense.php", {
         method: "POST",
@@ -156,22 +218,22 @@ function Home() {
         body: JSON.stringify(payload),
       });
       const data = await response.json();
-      if(data.status === "success") {
+
+      if (data.status === "success") {
         fetchExpenses();
         fetchPaymentMethods();
         toast({
           title: "Despesa adicionada",
           description: "A despesa foi registrada com sucesso!",
         });
-      }
-      else {
+      } else {
         toast({
           title: "Erro ao registrar despesa",
           description: data.message,
           variant: "destructive",
         });
       }
-    }catch(error) {
+    } catch (error) {
       console.error("Erro ao adicionar despesa:", error);
       toast({
         title: "Erro ao registrar despesa",
@@ -180,148 +242,91 @@ function Home() {
       });
     }
   };
-  
-  const handleAddRecurringExpense = async (expense) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if(!user) return;
-  
-    const selectedMethod = paymentMethods.find(
-      (m) => m.id === parseInt(expense.paymentMethod)
-    );
-    
-    if(!selectedMethod) {
-      console.error("Método de pagamento não encontrado");
-      return;
-    }
-    
-    const payload = {
-      user_id: user.id,
-      payment_method_id: selectedMethod.id,
-      description: expense.description,
-      amount: expense.amount,
-      date: expense.date,
-      payment_type: selectedMethod.type, 
-      is_recurring: false,
-      installments: expense.installments, //caso esteja usando parcelas
-    };
-  
-    try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      if(data.status === "success") {
-        fetchExpenses();
-        fetchPaymentMethods();
-        toast({
-          title: "Despesa adicionada",
-          description: "A despesa foi registrada com sucesso!",
-        });
-      }else {
-        toast({
-          title: "Erro ao registrar despesa",
-          description: data.message,
-          variant: "destructive",
-        });
-      }
-    }catch(error) {
-      console.error("Erro ao adicionar despesa:", error);
-      toast({
-        title: "Erro ao registrar despesa",
-        description: "Ocorreu um erro ao adicionar a despesa.",
-        variant: "destructive",
-      });
-    }
-  };
-  
+
   const handleAddPaymentMethod = () => {
-    fetchPaymentMethods(); // Atualiza da API
+    fetchPaymentMethods();
     toast({
       title: "Método de pagamento adicionado",
-      description: "O método de pagamento foi registrado com sucesso!"
+      description: "O método de pagamento foi registrado com sucesso!",
     });
   };
-  
+const handleUpdateBalance = async (paymentMethodId, newBalance) => {
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  if (!user) return;
 
-  const handleUpdateBalance = async (paymentMethodId, newBalance) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if(!user) return;
-    const success = await updateBalance(user.id, paymentMethodId, newBalance);
-    if(success) {
-      fetchPaymentMethods();
-    }
-  };
-  
+  const success = await updateBalance(user.id, paymentMethodId, newBalance);
+
+  if (success) {
+    // Atualiza o método localmente
+    setPaymentMethods((prevMethods) =>
+      prevMethods.map((method) =>
+        method.id === paymentMethodId
+          ? { ...method, balance: newBalance }
+          : method
+      )
+    );
+
+    // Recarrega os métodos do backend para garantir sincronização
+    fetchPaymentMethods();
+  }
+};
+
+
+
 
   const getTotalBalance = () => {
-    return paymentMethods
-      .filter(method => method.type !== 'credit')
-      .reduce((total, method) => total + parseFloat(method.balance || 0), 0);
+    return paymentMethods.reduce(
+      (total, method) => total + parseFloat(method.balance || 0),
+      0
+    );
   };
 
   const onPayCreditExpense = async (payId, selectedPaymentMethod) => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    if(!user) return;
-    console.log({
-      pay_id: payId,
-      payment_method_id: selectedPaymentMethod?.id,
-      user_id: user?.id,
-    });
-    
+    if (!user) return;
+
     try {
       const response = await fetch("http://localhost/api_financas/payCreditExpense.php", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           pay_id: payId,
-          payment_method_id: selectedPaymentMethod?.id, 
+          payment_method_id: selectedPaymentMethod?.id,
           user_id: user?.id,
         }),
       });
-  
-      const data = await response.json(); // lê o body uma única vez
-  
-      if(!response.ok) {
+
+      const data = await response.json();
+
+      if (!response.ok) {
         window.alert("Erro no pagamento: " + (data.message || "Erro desconhecido"));
         return;
       }
-  
-      if(data.status === "success") {
+
+      if (data.status === "success") {
         fetchExpenses();
         fetchPaymentMethods();
-      }else {
+      } else {
         window.alert("Erro no pagamento: " + data.message);
       }
-    }catch(error) {
+    } catch (error) {
       console.error("Erro na requisição de pagamento:", error);
       window.alert("Erro: Ocorreu um erro ao processar o pagamento");
     }
   };
-  
+
   const updateBalance = async (user_id, paymentMethodId, newBalance) => {
     try {
       const response = await fetch("http://localhost/api_financas/updateBalance.php", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          user_id,
-          payment_method_id: paymentMethodId,
-          newBalance,
-        }),
+        body: JSON.stringify({ user_id, payment_method_id: paymentMethodId, newBalance }),
       });
       const data = await response.json();
-      if(!response.ok) {
+
+      if (!response.ok) {
         toast({
           title: "Erro ao atualizar saldo",
           description: data.message || "Erro desconhecido",
@@ -329,13 +334,11 @@ function Home() {
         });
         return false;
       }
-      if(data.status === "success") {
-        toast({
-          title: "Saldo atualizado",
-          description: data.message,
-        });
+
+      if (data.status === "success") {
+        toast({ title: "Saldo atualizado", description: data.message });
         return true;
-      }else {
+      } else {
         toast({
           title: "Erro ao atualizar saldo",
           description: data.message,
@@ -343,7 +346,7 @@ function Home() {
         });
         return false;
       }
-    }catch(error) {
+    } catch (error) {
       console.error("Erro ao atualizar saldo:", error);
       toast({
         title: "Erro ao atualizar saldo",
@@ -353,7 +356,7 @@ function Home() {
       return false;
     }
   };
-  
+
   return (
     <Layout>
       <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-primary/20 to-muted px-4 py-10">
@@ -369,7 +372,7 @@ function Home() {
                 className="backdrop-blur-md"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Novo Método
+                Novo Cartão
               </Button>
               <Button
                 onClick={() => setShowAddExpense(true)}
@@ -389,7 +392,7 @@ function Home() {
               </Button>
             </div>
           </div>
-  
+
           <div className="bg-card/90 backdrop-blur-md border border-border rounded-xl shadow-md p-6">
             <Dashboard
               expenses={expenses}
@@ -400,24 +403,24 @@ function Home() {
             />
           </div>
         </div>
-  
+
         <AddExpenseDialog
           open={showAddExpense}
           onOpenChange={setShowAddExpense}
           onAddExpense={handleAddExpense}
-          paymentMethods={paymentMethods.filter((m) => m.type !== "credit")}
+          paymentMethods={paymentMethods}
           title="Adicionar Compra no Débito"
         />
-  
+
         <AddExpenseDialog
           open={showAddCreditExpense}
           onOpenChange={setShowAddCreditExpense}
           onAddExpense={handleAddRecurringExpense}
-          paymentMethods={paymentMethods.filter((m) => m.type === "credit")}
+          paymentMethods={paymentMethods}
           title="Adicionar Compra no Crédito"
           isCredit={true}
         />
-  
+
         <AddPaymentMethodDialog
           open={showAddPaymentMethod}
           onOpenChange={setShowAddPaymentMethod}
@@ -425,7 +428,7 @@ function Home() {
         />
       </div>
     </Layout>
-  );  
+  );
 }
 
 export default Home;

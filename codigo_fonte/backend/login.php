@@ -5,7 +5,7 @@ header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
 
-if($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
@@ -21,9 +21,9 @@ $stmt->bind_param("s", $email);
 $stmt->execute();
 $result = $stmt->get_result();
 
-if($result->num_rows > 0) {
+if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
-    if(password_verify($password, $row['password'])) {
+    if (password_verify($password, $row['password'])) {
         session_regenerate_id(true);
         $_SESSION['user_id'] = $row['id'];
         echo json_encode([
@@ -34,10 +34,10 @@ if($result->num_rows > 0) {
                 "email" => $email
             ]
         ]);
-    }else {
+    } else {
         echo json_encode(["status" => "error", "message" => "Credenciais inválidas"]);
     }    
-}else {
+} else {
     echo json_encode(["status" => "error", "message" => "Usuário não encontrado"]);
 }
 

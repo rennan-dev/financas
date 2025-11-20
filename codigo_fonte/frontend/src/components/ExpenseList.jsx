@@ -2,23 +2,19 @@ import React, { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { Repeat } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// Removidos 'Button' e 'Select' pois não são mais usados aqui
+// import { Button } from "@/components/ui/button";
+// import { ...Select... } from "@/components/ui/select";
 
-function ExpenseList({ expenses, onPayCreditExpense, debitMethods }) {
-  //estado para armazenar o método selecionado para cada payId
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState({});
+// MUDANÇA: Removido 'onPayCreditExpense' e 'debitMethods' das props
+function ExpenseList({ expenses }) {
+  // Removido o estado 'selectedPaymentMethod' pois não é mais usado
+  // const [selectedPaymentMethod, setSelectedPaymentMethod] = useState({});
 
   const getPaymentTypeLabel = (type) => {
-    if(type === "credit") return "Crédito";
-    if(type === "debit") return "Débito";
+    if (type === "credit") return "Crédito";
+    if (type === "debit") return "Débito";
     return "Dinheiro";
   };
 
@@ -30,24 +26,27 @@ function ExpenseList({ expenses, onPayCreditExpense, debitMethods }) {
         </div>
       ) : (
         expenses.map((expense, index) => {
-          //converte os campos numéricos e booleanos
+          //... (lógica de variáveis permanece a mesma)
           const isInstallment = expense.installment_id != null;
           const totalAmount = parseFloat(expense.total_amount || "0");
-          const installmentAmount = parseFloat(expense.installment_amount || "0");
+          const installmentAmount = parseFloat(
+            expense.installment_amount || "0"
+          );
           const displayAmount = isInstallment ? installmentAmount : totalAmount;
           const fullAmount = isInstallment ? totalAmount : null;
           const isRecurring = Number(expense.is_recurring) === 1;
-          const expensePaid = Number(expense.expense_paid) === 1;
-          const installmentPaid = Number(expense.installment_paid) === 1;
-          const isPaid = isInstallment ? installmentPaid : expensePaid;
-  
-          //define a data correta: se for parcela, usa due_date; senão, expense_date
-          const displayDate = isInstallment ? expense.due_date : expense.expense_date;
-          //nome do método vindo do JOIN
+          // const expensePaid = Number(expense.expense_paid) === 1; // Não é mais usado
+          // const installmentPaid = Number(expense.installment_paid) === 1; // Não é mais usado
+          // const isPaid = isInstallment ? installmentPaid : expensePaid; // Não é mais usado
+
+          const displayDate = isInstallment
+            ? expense.due_date
+            : expense.expense_date;
           const paymentMethodName = expense.payment_method_name || "";
-          //identificador para ações de pagamento
-          const payId = isInstallment ? expense.installment_id : expense.expense_id;
-  
+          const payId = isInstallment
+            ? expense.installment_id
+            : expense.expense_id;
+
           return (
             <motion.div
               key={payId}
@@ -69,15 +68,16 @@ function ExpenseList({ expenses, onPayCreditExpense, debitMethods }) {
                     locale: ptBR,
                   })}
                 </p>
-                {/* Exibe o tipo de pagamento */}
-                <p className="text-sm text-muted-foreground">
-                  Pagamento: {getPaymentTypeLabel(expense.payment_type)}
-                </p>
+                
+                {/* MUDANÇA: Bloco "Pagamento:" foi removido daqui */}
+
                 <p className="text-sm text-muted-foreground">
                   {paymentMethodName}
                   {isInstallment && Number(expense.total_installments) > 1 && (
                     <span className="ml-2">
-                      (Parcela {expense.installment_number} de {expense.total_installments} - {getPaymentTypeLabel(expense.payment_type)})
+                      (Parcela {expense.installment_number} de{" "}
+                      {expense.total_installments} -{" "}
+                      {getPaymentTypeLabel(expense.payment_type)})
                     </span>
                   )}
                   {expense.paidWith && (
@@ -98,64 +98,20 @@ function ExpenseList({ expenses, onPayCreditExpense, debitMethods }) {
                     </p>
                   )}
                 </div>
-                {expense.payment_type === "credit" && !isPaid && (
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={
-                        selectedPaymentMethod[payId]
-                          ? selectedPaymentMethod[payId].id.toString()
-                          : ""
-                      }
-                      onValueChange={(value) => {
-                        // Procura o objeto de método pelo id (convertendo para string)
-                        const method = debitMethods.find(
-                          (m) => m.id.toString() === value
-                        );
-                        setSelectedPaymentMethod((prev) => ({
-                          ...prev,
-                          [payId]: method,
-                        }));
-                      }}
-                    >
-                      <SelectTrigger className="w-full sm:w-[200px]">
-                        <SelectValue placeholder="Selecione a conta" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {debitMethods.map((method) => (
-                          <SelectItem key={method.id} value={method.id.toString()}>
-                            {method.name} (R$ {parseFloat(method.balance).toFixed(2)})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!selectedPaymentMethod[payId]}
-                      onClick={() => {
-                        if(selectedPaymentMethod[payId]) {
-                          onPayCreditExpense(payId, selectedPaymentMethod[payId]);
-                          // Limpa a seleção para este payId
-                          setSelectedPaymentMethod((prev) => ({
-                            ...prev,
-                            [payId]: undefined,
-                          }));
-                        }
-                      }}
-                    >
-                      Pagar
-                    </Button>
-                  </div>
+
+                {/* MUDANÇA: Bloco de Pagar (Select + Button) foi totalmente removido */}
+                {/* {expense.payment_type === "credit" && !isPaid && ( ... )} */}
+
+                {/* MUDANÇA: Lógica de status trocada para Crédito/Débito */}
+                {expense.payment_type === "credit" ? (
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Crédito
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Débito
+                  </span>
                 )}
-                <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    isPaid
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {isPaid ? "Pago" : "Pendente"}
-                </span>
               </div>
             </motion.div>
           );
