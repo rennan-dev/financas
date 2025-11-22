@@ -6,21 +6,17 @@ Esta seção apresenta uma descrição técnica detalhada da stack tecnológica 
 
 <h3>1. Camada de Apresentação (Frontend)</h3>
 
-<p style="text-align: justify;">
-A camada de apresentação é responsável por prover a interface gráfica ao usuário, permitindo a interação com as funcionalidades do sistema por meio de uma aplicação web responsiva e orientada a componentes.
-</p>
-
 <h4>1.1 Tecnologias Base</h4>
 <ul>
   <li><strong>HTML5</strong> – Linguagem de marcação utilizada para estruturar o conteúdo semântico das páginas.</li>
-  <li><strong>CSS3</strong> – Utilizado na estilização visual da interface, incluindo definição de layout, responsividade e identidade visual.</li>
-  <li><strong>JavaScript (ECMAScript 6+)</strong> – Linguagem de programação responsável pela lógica de interação, manipulação do DOM e controle de estados da aplicação.</li>
+  <li><strong>CSS3 / Tailwind CSS</strong> – Framework CSS utilitário utilizado para estilização ágil e responsiva, em conjunto com CSS padrão.</li>
+  <li><strong>JavaScript</strong> – Linguagem de programação responsável pela lógica de interação.</li>
 </ul>
 
 <h4>1.2 Framework e Arquitetura de Interface</h4>
 
 <p style="text-align: justify;">
-O frontend foi desenvolvido utilizando a biblioteca <strong>React.js</strong>, que adota o paradigma de componentes reutilizáveis e arquitetura baseada em Virtual DOM, proporcionando melhor desempenho e organização do código. O sistema segue uma estrutura modular, onde cada funcionalidade é encapsulada em componentes específicos, facilitando manutenção e escalabilidade.
+O frontend foi desenvolvido utilizando a biblioteca <strong>React.js</strong>. Para a construção dos elementos de interface, o sistema utiliza componentes baseados em <strong>Shadcn UI</strong> (visíveis no diretório <code>src/components/ui</code>), que oferecem acessibilidade e consistência visual pré-configurada (botões, diálogos, toasts).
 </p>
 
 <p style="text-align: justify;">
@@ -30,19 +26,13 @@ A organização do projeto segue a estrutura padrão do React, destacando-se a p
 <h4>1.3 Gerenciamento de Pacotes e Build</h4>
 
 <p style="text-align: justify;">
-O gerenciamento de dependências e o processo de build do frontend são realizados por meio do ambiente <strong>Node.js</strong> e do gerenciador de pacotes <strong>npm</strong>, definidos nos arquivos <code>package.json</code> e <code>package-lock.json</code>, que especificam as bibliotecas e versões utilizadas no projeto.
+O gerenciamento de dependências é realizado via <strong>npm</strong>. Para o processo de build e servidor de desenvolvimento, utiliza-se o <strong>Vite</strong> (configurado em <code>vite.config.js</code>), que oferece compilação otimizada e Hot Module Replacement (HMR) superior a ferramentas tradicionais.
 </p>
 
 <h4>1.4 Processamento de Estilos</h4>
 
 <p style="text-align: justify;">
-O sistema utiliza <strong>PostCSS</strong> como ferramenta de processamento de folhas de estilo, permitindo transformações automatizadas em CSS, otimização de código e aplicação de plugins para melhoria de compatibilidade e desempenho, conforme configuração definida em <code>postcss.config.js</code>.
-</p>
-
-<h4>1.5 Servidor de Aplicação Frontend</h4>
-
-<p style="text-align: justify;">
-A aplicação frontend é servida por meio do servidor web <strong>NGINX</strong>, configurado pelo arquivo <code>nginx.conf</code>, responsável por gerenciar requisições HTTP, servir arquivos estáticos e controlar rotas da aplicação cliente.
+O sistema utiliza <strong>PostCSS</strong> integrado ao <strong>Tailwind CSS</strong> (arquivo <code>tailwind.config.js</code>), permitindo a geração de folhas de estilo otimizadas e a utilização de classes utilitárias diretamente nos componentes React.
 </p>
 
 <h3>2. Camada de Aplicação (Backend)</h3>
@@ -82,7 +72,7 @@ Esses scripts recebem dados via requisições HTTP no formato JSON e realizam op
 <h4>3.1 Sistema Gerenciador</h4>
 
 <p style="text-align: justify;">
-O sistema utiliza <strong>MySQL</strong> como Sistema Gerenciador de Banco de Dados (SGBD), podendo também operar em ambientes compatíveis como MariaDB.
+O sistema utiliza <strong>MySQL</strong> como Sistema Gerenciador de Banco de Dados (SGBD).
 </p>
 
 <h4>3.2 Modelagem e Estrutura</h4>
@@ -104,7 +94,7 @@ As principais tabelas que compõem o sistema são:
 <h3>4. Comunicação e Integração</h3>
 
 <p style="text-align: justify;">
-A integração entre frontend e backend ocorre por meio de requisições HTTP seguindo o padrão RESTful, utilizando principalmente os métodos POST e GET, com troca de dados no formato JSON. Essa comunicação é documentada por meio dos arquivos <code>endpoints-rest.md</code> e <code>exemplos-request-response.md</code>.
+A integração entre frontend e backend ocorre por meio de requisições HTTP seguindo o padrão RESTful, utilizando principalmente os métodos POST e GET, com troca de dados no formato JSON.
 </p>
 
 <h3>5. Autenticação e Controle de Sessão</h3>
@@ -121,8 +111,8 @@ O sistema utiliza autenticação baseada em sessões PHP, armazenadas por meio d
     <th>Tecnologias</th>
   </tr>
   <tr>
-    <td>Apresentação</td>
-    <td>React.js, JavaScript ES6, HTML5, CSS3, PostCSS, npm, Node.js, NGINX</td>
+      <td>Apresentação</td>
+      <td>React.js, Vite, Tailwind CSS, Shadcn UI, JavaScript, HTML5, NGINX</td>
   </tr>
   <tr>
     <td>Aplicação</td>
@@ -130,7 +120,7 @@ O sistema utiliza autenticação baseada em sessões PHP, armazenadas por meio d
   </tr>
   <tr>
     <td>Persistência</td>
-    <td>MySQL / MariaDB</td>
+    <td>MySQL</td>
   </tr>
   <tr>
     <td>Segurança</td>
