@@ -39,7 +39,7 @@ A seguir, apresenta-se o diagrama de classes do sistema:
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Classes do Sistema de Finanças Pessoais" />
+  <img src="img/Diagrama de Classes.jpg" alt="Diagrama de Classes do Sistema de Finanças Pessoais" />
 </p>
 
 ---
@@ -69,7 +69,7 @@ A seguir, apresenta-se o diagrama de casos de uso do sistema:
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Casos de Uso do Sistema de Finanças Pessoais" />
+  <img src="img/Diagrama de Casos de Uso.jpg" alt="Diagrama de Casos de Uso do Sistema de Finanças Pessoais" />
 </p>
 
 ---
@@ -97,7 +97,7 @@ Este diagrama descreve o fluxo de interação para o cadastro de um novo usuári
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Cadastro de Usuário" />
+  <img src="img/DS_cadastro_de_usuario.jpg" alt="Diagrama de Sequência - Cadastro de Usuário" />
 </p>
 
 ---
@@ -109,7 +109,7 @@ Este diagrama representa o fluxo de validação de login, incluindo a entrada da
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Validação de Login de Usuário" />
+  <img src="img/DS_validacao_login_usuario.jpg" alt="Diagrama de Sequência - Validação de Login de Usuário" />
 </p>
 
 ---
@@ -121,7 +121,7 @@ Este diagrama ilustra o processo de alteração de senha de um usuário autentic
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Alteração de Senha" />
+  <img src="img/DS_alteracao_senha.jpg" alt="Diagrama de Sequência - Alteração de Senha" />
 </p>
 
 ---
@@ -133,7 +133,7 @@ Este diagrama mostra o fluxo de exclusão da conta de um usuário. A interação
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Exclusão de Usuário" />
+  <img src="img/DS_exclusão_senha.jpg" alt="Diagrama de Sequência - Exclusão de Usuário" />
 </p>
 
 ---
@@ -145,7 +145,7 @@ Este diagrama descreve o fluxo de cadastro de um novo método de pagamento (como
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Cadastro de Método de Pagamento" />
+  <img src="img/DS_cadastro_metodopagamento.jpg" alt="Diagrama de Sequência - Cadastro de Método de Pagamento" />
 </p>
 
 ---
@@ -157,7 +157,7 @@ Neste diagrama é representado o fluxo de atualização de saldo ou limite de um
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Atualizar Saldo de Cartões e Contas" />
+  <img src="img/DS_atualizar_saldo_cartões.jpg" alt="Diagrama de Sequência - Atualizar Saldo de Cartões e Contas" />
 </p>
 
 ---
@@ -169,7 +169,7 @@ Este diagrama apresenta o fluxo para exclusão de um método de pagamento. O bac
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Exclusão de Método de Pagamento" />
+  <img src="img/DS_exclusao_metodo_pagamento.jpg" alt="Diagrama de Sequência - Exclusão de Método de Pagamento" />
 </p>
 
 ---
@@ -181,7 +181,7 @@ Este diagrama detalha o fluxo de cadastro de uma despesa utilizando cartão de c
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Cadastro de Despesas no Cartão de Crédito" />
+  <img src="img/DS_cadastro_despesas_cartaodecredito.jpg" alt="Diagrama de Sequência - Cadastro de Despesas no Cartão de Crédito" />
 </p>
 
 ---
@@ -193,7 +193,7 @@ Este diagrama descreve o fluxo de cadastro de despesa utilizando cartão de déb
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Cadastro de Despesas no Cartão de Débito" />
+  <img src="img/DS_cadastro_despesas_cartaodebito.jpg" alt="Diagrama de Sequência - Cadastro de Despesas no Cartão de Débito" />
 </p>
 
 ---
@@ -205,7 +205,7 @@ Este diagrama representa o processo de alteração de uma despesa previamente re
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Alterar Despesa" />
+  <img src="img/DS_alterar_despesas.jpg" alt="Diagrama de Sequência - Alterar Despesa" />
 </p>
 
 ---
@@ -217,7 +217,7 @@ Neste diagrama é apresentado o fluxo de exclusão de uma despesa. Além da remo
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Excluir Despesa" />
+  <img src="img/DS_excluir_despesas.jpg" alt="Diagrama de Sequência - Excluir Despesa" />
 </p>
 
 ---
@@ -229,5 +229,5 @@ Este diagrama descreve o fluxo para cálculo do saldo projetado após uma possí
 </p>
 
 <p style="text-align: center;">
-  <img src="" alt="Diagrama de Sequência - Cálculo de Saldo Após Compra no Débito" />
+  <img src="img/DS_calcular_saldo_apos_compra_debito.jpg" alt="Diagrama de Sequência - Cálculo de Saldo Após Compra no Débito" />
 </p>
