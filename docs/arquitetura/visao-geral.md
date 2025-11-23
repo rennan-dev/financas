@@ -1,90 +1,128 @@
-# Visão Geral do Sistema - Finanças Pessoais
+# Arquitetura do Sistema - Finanças Pessoais
 
-## 1. Objetivo do Sistema
-
-O sistema **Finanças Pessoais** tem como objetivo fornecer uma aplicação simples e funcional para controle financeiro individual. Ele permite que os usuários registrem e gerenciem suas despesas mensais, categorizadas por métodos de pagamento (crédito e débito), acompanhem seu saldo, visualizem a distribuição de gastos e mantenham controle de pagamentos pendentes.
+Este documento detalha as decisões arquiteturais tomadas para o desenvolvimento do sistema de Finanças Pessoais, descrevendo os padrões utilizados tanto no backend quanto no frontend e como eles se comunicam.
 
 ---
 
-## 2. Tecnologias Utilizadas
+## 1. Visão Geral da Arquitetura
 
-- **Frontend**: Desenvolvido com [React.js](https://reactjs.org/), utilizando o Vite como bundler e Tailwind CSS para o design da interface.
-- **Backend**: Implementado em [PHP](https://www.php.net/) através de scripts individuais para cada funcionalidade.
-- **Banco de Dados**: MySQL
+O sistema adota uma arquitetura clássica **Cliente-Servidor**, onde as responsabilidades estão claramente separadas:
 
----
-
-## 3. Funcionalidades Principais
-
-### Página Inicial (Home)
-
-- Exibição do saldo total atual.
-- Distribuição de gastos em formato de gráfico (débito e crédito).
-- Botões de ação para:
-  - Adicionar método de pagamento.
-  - Registrar compra no débito.
-  - Registrar compra no crédito.
-- Lista de despesas:
-  - Nome da despesa.
-  - Data e forma de pagamento.
-  - Método de pagamento utilizado.
-  - Valor da despesa.
-  - Status do pagamento (pago ou pendente).
-
-### Página de Perfil
-
-- Visualização de dados do usuário (nome, email, data de criação da conta).
-- Alteração de senha.
-- Exclusão de conta.
-
-### Página de Cartões
-
-- Visualização de todos os cartões cadastrados (débito e crédito).
-- Informações apresentadas:
-  - Nome do cartão.
-  - Tipo (crédito ou débito).
-  - Saldo disponível.
-  - Data de criação.
-- Opção para deletar cartões.
-
-### Autenticação
-
-- Tela de login com campos de email e senha.
-- Tela de cadastro com confirmação de senha.
-- Funcionalidade de recuperação de senha (ainda em desenvolvimento).
+* **Cliente (Frontend):** Uma aplicação web moderna e reativa, responsável pela interface do usuário, navegação e estado da aplicação no navegador.
+* **Servidor (Backend):** Um conjunto de scripts procedurais responsáveis pela lógica de negócios, autenticação e persistência de dados no banco de dados MySQL.
+* **Comunicação:** O frontend se comunica com o backend através de requisições HTTP (fetch API), trocando dados predominantemente no formato JSON.
 
 ---
 
-## 4. Estrutura de Código
+## 2. Backend: Padrão Page Controller
 
-### Backend (`codigo_fonte/backend/`)
+A arquitetura do backend foi construída seguindo o padrão de projeto **Page Controller**.
 
-Organizado em scripts PHP individuais, cada um responsável por uma funcionalidade específica:
+### Conceito e Referência Teórica
 
-- `login.php`, `logout.php`, `register.php`: controle de autenticação.
-- `addExpense.php`, `getExpenses.php`, `payCreditExpense.php`: manipulação de despesas.
-- `addPaymentMethod.php`, `getPaymentMethods.php`, `updateBalance.php`: gerenciamento de métodos e saldo.
-- Diretório `accounts/`: operações relacionadas à conta do usuário (perfil, senha, exclusão).
+O padrão Page Controller é um dos padrões fundamentais para desenvolvimento web, catalogado por **Martin Fowler** em seu livro clássico, *"Patterns of Enterprise Application Architecture"* (Padrões de Arquitetura de Aplicações Corporativas).
 
-### Frontend (`codigo_fonte/frontend/`)
+Segundo Fowler, a definição do padrão é:
 
-- Utiliza a arquitetura baseada em componentes do React.
-- Arquivos principais:
-  - `App.jsx`, `main.jsx`: estrutura e ponto de entrada.
-  - `components/`: contém os componentes de interface e modais de ação.
-  - `pages/`: telas específicas (Home, Perfil, Login, etc.).
-  - `lib/utils.js`: funções utilitárias.
-  - `index.css`: customizações globais de estilo.
+> "Um objeto que trata uma requisição para uma página ou ação específica em um site Web."
+
+Na prática, isso significa que para cada ação distinta que o sistema pode realizar (como "fazer login", "adicionar despesa" ou "listar métodos de pagamento"), existe um arquivo PHP físico correspondente no servidor que atua como o controlador exclusivo daquela requisição.
+
+### Aplicação no Projeto
+
+Diferente de frameworks MVC modernos que utilizam um "Front Controller" (um único ponto de entrada que roteia as requisições), este projeto utiliza scripts PHP independentes como pontos de entrada diretos.
+
+* Quando o frontend precisa autenticar um usuário, ele envia uma requisição POST diretamente para `/backend/login.php`.
+* Quando precisa buscar as despesas, ele chama `/backend/getExpenses.php`.
+
+Essa abordagem oferece simplicidade na implementação e manutenção para o escopo atual do projeto, onde cada script tem uma responsabilidade única e bem definida.
+
+### Diagrama da Arquitetura
+
+Abaixo está uma representação visual da arquitetura implementada, destacando o fluxo entre a SPA e os múltiplos Page Controllers.
+
+![Arquitetura do Sistema](arquitetura.png)
 
 ---
 
-## 5. Público-Alvo
+## 3. Frontend: Single Page Application (SPA)
 
-Usuários finais que desejam controlar suas finanças pessoais de forma prática, com foco em simplicidade e funcionalidades essenciais para o controle básico de gastos mensais.
+O frontend foi desenvolvido utilizando **React** e adota o modelo de **Single Page Application (SPA)**.
+
+Diferente de aplicações web tradicionais onde cada clique carrega uma nova página HTML do servidor, a SPA carrega uma única página HTML inicial (`index.html`) e, a partir daí, o JavaScript (React) assume o controle.
+
+* **Navegação Fluida:** O roteamento entre as "páginas" (Home, Perfil, Cartões) é gerenciado no lado do cliente (browser), atualizando o conteúdo da tela dinamicamente sem recarregar a página inteira.
+* **Componentização:** A interface é construída através de componentes reutilizáveis (localizados em `src/components/`), facilitando a manutenção e garantindo consistência visual (utilizando Tailwind CSS e Shadcn/UI).
 
 ---
 
-## 6. Considerações Finais
+## 4. Estrutura de Diretórios e Arquivos
 
-O sistema foi planejado para ser intuitivo e direto ao ponto, utilizando tecnologias modernas no frontend com React e uma abordagem procedural no backend com PHP. Sua modularidade permite fácil manutenção e expansão futura, como adição de categorias de gastos, gráficos analíticos avançados, ou integração com APIs bancárias.
+Abaixo está a estrutura física do projeto, detalhando como os padrões acima se refletem na organização dos arquivos.
 
+### 📂 Raiz do Projeto
+
+```
+📂 codigo_fonte
+│
+├── 📂 backend (Implementação Page Controller)
+│   │   # Endpoints principais de despesas e métodos
+│   ├── 📄 addExpense.php
+│   ├── 📄 addPaymentMethod.php
+│   ├── 📄 config.php                (Configuração do Banco de Dados)
+│   ├── 📄 deleteExpense.php
+│   ├── 📄 deletePaymentMethod.php
+│   ├── 📄 getExpenses.php
+│   ├── 📄 getPaymentMethods.php
+│   ├── 📄 login.php                 (Endpoint de Autenticação)
+│   ├── 📄 payCreditExpense.php
+│   ├── 📄 register.php
+│   ├── 📄 updateBalance.php
+│   ├── 📄 updateExpense.php
+│   │
+│   └── 📂 accounts (Endpoints de gerenciamento de conta)
+│       ├── 📄 delete_account.php
+│       ├── 📄 logout.php
+│       ├── 📄 profile.php
+│       └── 📄 update_password.php
+│
+└── 📂 frontend
+    ├── 📄 package.json              (Dependências do projeto)
+    ├── 📄 vite.config.js            (Configuração do Bundler)
+    ├── 📄 tailwind.config.js        (Configuração de Estilos)
+    │
+    ├── 📂 public
+    │   └── 📄 favicon.png
+    │
+    └── 📂 src
+        ├── 📄 main.jsx              (Ponto de entrada do React)
+        ├── 📄 App.jsx               (Componente raiz e roteamento)
+        ├── 📄 index.css             (Estilos globais)
+        │
+        ├── 📂 components            (Componentes reutilizáveis de UI e Lógica)
+        │   ├── 📄 Dashboard.jsx
+        │   ├── 📄 ExpenseList.jsx
+        │   ├── 📄 Layout.jsx
+        │   ├── 📂 ui                (Componentes base do Shadcn/UI)
+        │   │   ├── 📄 button.jsx
+        │   │   ├── 📄 input.jsx
+        │   │   ├── 📄 dialog.jsx
+        │   │   └── ... (Outros componentes UI)
+        │   │
+        │   └── ... (Diálogos de Adicionar/Editar Despesa/Cartão)
+        │
+        ├── 📂 lib
+        │   └── 📄 utils.js          (Funções utilitárias)
+        │
+        └── 📂 pages                 (Visualizações das Rotas da SPA)
+            ├── 📄 Home.jsx
+            ├── 📄 Login.jsx
+            ├── 📄 Profile.jsx
+            └── ... (Outras páginas do sistema)
+```
+
+---
+
+## 5. Conclusão da Arquitetura
+
+A combinação de uma **Single Page Application** no frontend com o padrão **Page Controller** no backend resulta em um sistema onde a experiência do usuário é ágil e moderna, enquanto o servidor mantém uma estrutura simples, direta e fácil de entender, sem a necessidade de frameworks complexos de backend para o escopo atual.
