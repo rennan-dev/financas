@@ -25,11 +25,25 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | :--- | :--- |
 | **Identificador** | **US01** |
 | **User Story** | "Enquanto **visitante**, quero **criar uma conta informando meus dados pessoais** para **obter acesso ao sistema e gerenciar minhas finanças**." |
-| **Critérios de Aceitação** | 1. O sistema deve receber os dados: Nome, E-mail, Senha e Confirmação de senha.<br>2. O sistema deve limpar os campos de texto atarvés da remoção de espaços desnecessários no início e fim (`trim`).<br>3. Após o cadastro com sucesso, o sistema deve retornar a mensagem "Usuário Cadastrado com sucesso".<br>4. Comportamento específico: Após o cadastro, o usuário já deve ser considerado logado automaticamente. |
+| **Critérios de Aceitação** | 1. O sistema deve receber os dados: Nome, E-mail, Senha e Confirmação de senha.<br>2. O sistema deve limpar os campos de texto através da remoção de espaços desnecessários no início e fim (`trim`).<br>3. Após o cadastro com sucesso, o sistema deve retornar a mensagem "Usuário Cadastrado com sucesso".<br>4. Comportamento específico: Após o cadastro, o usuário já deve ser considerado logado automaticamente. |
 | **Regras de Negócio** | **RN01 (Consistência):** Os campos "Senha" e "Confirmação de Senha" devem ser idênticos.<br>**RN02 (Segurança):** A senha deve ter no mínimo 6 caracteres e **não** pode conter espaços em branco.<br>**RN03 (Unicidade):** Não é permitido cadastrar um e-mail já existente na base de dados.<br>**RN04 (Proteção):** A senha deve ser armazenada como Hash, nunca em texto plano. |
 | **Evidência (Backend)** | **Arquivo:** `register.php`<br>• *RN02:* `if (strlen($password) < 6 ...)`<br>• *RN03:* `SELECT id FROM users WHERE email = ?`<br>• *RN04:* `password_hash($password, PASSWORD_DEFAULT)` |
 
-#### Evidência (Interface): 
+#### Evidência (Interface):
+<p align="center">
+  <img src="./img/1-criar-conta.png" width="650px">
+</p>
+<p align="center"><em>Figura 1 – Tela de criação de conta preenchida.</em></p>
+
+<p align="center">
+  <img src="./img/2-criar-conta.png" width="650px">
+</p>
+<p align="center"><em>Figura 2 – Mensagem de confirmação de criação de conta.</em></p>
+
+<p align="center">
+  <img src="./img/3-sistema-logado.png" width="650px">
+</p>
+<p align="center"><em>Figura 3 – Usuário automaticamente logado após criar conta.</em></p>
 
 ---
 
@@ -44,9 +58,24 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Regras de Negócio** | **RN01 (Segurança de Hash):** A validação da senha deve usar comparação de hash (`password_verify`), jamais comparação direta de texto.<br>**RN02 (Segurança de Sessão):** Ao autenticar com sucesso, o ID da sessão deve ser regenerado (`session_regenerate_id`) para evitar sequestro de sessão.<br>**RN03 (Higienização):** O e-mail deve ter espaços removidos antes da busca.<br>**RN04 (Fluxo):** O login falha imediatamente se o e-mail não existir no banco. |
 | **Evidência (Backend)** | **Arquivo:** `login.php`<br>• *RN01:* `password_verify($password, $row['password'])`<br>• *RN02:* `session_regenerate_id(true)`<br>• *RN04:* `if ($result->num_rows > 0) { ... } else { ... "Usuário não encontrado" }` |
 
-#### Evidência (Interface): 
----
+#### Evidência (Interface):
 
+<p align="center">
+  <img src="./img/4-login.png" width="650px">
+</p>
+<p align="center"><em>Figura 4 – Tela de login com credenciais preenchidas.</em></p>
+
+<p align="center">
+  <img src="./img/5-login-credenciais-invalidas.png" width="650px">
+</p>
+<p align="center"><em>Figura 5 – Mensagem de erro para credenciais inválidas.</em></p>
+
+<p align="center">
+  <img src="./img/6-login-usuario-nao-encontrado.png" width="650px">
+</p>
+<p align="center"><em>Figura 6 – Mensagem de erro para usuário não encontrado.</em></p>
+
+---
 
 ### US03- Alteração de Senha
 
@@ -60,6 +89,26 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Evidência (Backend)** | **Arquivo:** `update_password.php`<br>• *RN01:* `if (!isset($_SESSION['user_id']))`<br>• *RN02:* `if (!password_verify($current_password, $row['password']))`<br>• *RN04:* `if (strlen($new_password) < 6 ...)` |
 
 #### Evidência (Interface): 
+
+<p align="center">
+  <img src="./img/7-atualizar-senha.png" width="650px">
+</p>
+<p align="center"><em>Figura 7 – Tela de perfil com formulário de alteração de senha.</em></p>
+
+<p align="center">
+  <img src="./img/8-atualizar-senha.png" width="650px">
+</p>
+<p align="center"><em>Figura 8 – Confirmação de senha alterada com sucesso.</em></p>
+
+<p align="center">
+  <img src="./img/9-atualizar-senha-campo-vazio.png" width="650px">
+</p>
+<p align="center"><em>Figura 9 – Validação impedindo envio quando o campo não é preenchido.</em></p>
+
+<p align="center">
+  <img src="./img/10-senha-atual-incorreta.png" width="650px">
+</p>
+<p align="center"><em>Figura 10 – Erro exibido quando a senha atual não confere.</em></p>
 
 ---
 
@@ -76,6 +125,16 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 
 #### Evidência (Interface): 
 
+<p align="center">
+  <img src="./img/11-excluir-conta.png" width="650px">
+</p>
+<p align="center"><em>Figura 11 – Opção de exclusão de conta.</em></p>
+
+<p align="center">
+  <img src="./img/12-excluir-conta.png" width="650px">
+</p>
+<p align="center"><em>Figura 12 – Confirmação para exclusão de conta.</em></p>
+
 ---
 
 ### US05- Cadastro de Método de Pagamento
@@ -88,7 +147,17 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Regras de Negócio** | **RN01 (Obrigatoriedade):** Os campos `user_id` e `name` são mandatórios para a operação.<br>**RN02 (Tipagem e Sanitização):** O `user_id` é convertido forçadamente para inteiro (`intval`) e o nome tem espaços removidos (`trim`).<br>**RN03 (Modelo de Dados):** Neste ponto do sistema, um método de pagamento consiste apenas em uma "Etiqueta" (Nome), sem definição de limites, datas de vencimento ou saldos iniciais.<br>**RN04 (Protocolo HTTP):** O sistema utiliza códigos de resposta semânticos: 201 para sucesso na criação, 400 para erro de cliente e 500 para erro de banco. |
 | **Evidência (Backend)** | **Arquivo:** `addPaymentMethod.php`<br>• *RN01:* `if (!isset($data['user_id']) || !isset($data['name']))`<br>• *RN02:* `intval($data['user_id']); trim($data['name']);`<br>• *RN04:* `http_response_code(201);` vs `http_response_code(400);` |
 
-#### Evidência (Interface): 
+#### Evidência (Interface):
+
+<p align="center">
+  <img src="./img/13-adicionar-metodo-pagamento.png" width="650px">
+</p>
+<p align="center"><em>Figura 13 – Adicionar método de pagamento.</em></p>
+
+<p align="center">
+  <img src="./img/14-confirmar-metodo-pagamento.png" width="650px">
+</p>
+<p align="center"><em>Figura 14 – Confirmação de método de pagamento adicionado com sucesso.</em></p>
 
 ---
 
@@ -105,6 +174,16 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 
 #### Evidência (Interface): 
 
+<p align="center">
+  <img src="./img/15-atualizar-saldo-manual.png" width="650px">
+</p>
+<p align="center"><em>Figura 15 – Atualização manual do saldo.</em></p>
+
+<p align="center">
+  <img src="./img/16-atualizar-saldo-manual.png" width="650px">
+</p>
+<p align="center"><em>Figura 16 – Saldo atualizado exibido no painel financeiro.</em></p>
+
 ---
 
 ### US07- Exclusão de Método de Pagamento
@@ -120,8 +199,27 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 
 #### Evidência (Interface): 
 
----
+<p align="center">
+  <img src="./img/17-excluir-metodo-pagamento.png" width="650px">
+</p>
+<p align="center"><em>Figura 17 – Acessando tela de cartões disponíveis para exclusão.</em></p>
 
+<p align="center">
+  <img src="./img/18-excluir-metodo-pagamento.png" width="650px">
+</p>
+<p align="center"><em>Figura 18 – Confirmação para excluir método de pagamento.</em></p>
+
+<p align="center">
+  <img src="./img/19-excluir-metodo-pagamento.png" width="650px">
+</p>
+<p align="center"><em>Figura 19 – Processo de exclusão em andamento.</em></p>
+
+<p align="center">
+  <img src="./img/20-excluir-metodo-pagamento.png" width="650px">
+</p>
+<p align="center"><em>Figura 20 – Apenas um cartão restante após exclusão do método anterior.</em></p>
+
+---
 
 ### US08- Registro de Despesas (Crédito e Débito)
 
@@ -135,6 +233,16 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Evidência (Backend)** | **Arquivo:** `addExpense.php`<br>• *RN01:* `if ($payment_type !== 'credit') { UPDATE ... balance = balance - ? ... SET paid = 1 }`<br>• *RN03:* `$installment_amount = $amount / $installments;`<br>• *RN04:* `date('Y-m-d', strtotime("+".($i-1)." month", strtotime($date)))`<br>• *RN05:* `date_default_timezone_set('America/Manaus');` |
 
 #### Evidência (Interface): 
+
+<p align="center">
+  <img src="./img/21-adicionar-compra-debito.png" width="650px">
+</p>
+<p align="center"><em>Figura 21 – Registro de Despesa - adicionar compra no débito.</em></p>
+
+<p align="center">
+  <img src="./img/22-adicionar-compra-credito.png" width="650px">
+</p>
+<p align="center"><em>Figura 22 – Registro de Despesa - adicionar compra no crédito.</em></p>
 
 ---
 
@@ -151,6 +259,16 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 
 #### Evidência (Interface): 
 
+<p align="center">
+  <img src="./img/23-alterar-despesa.png" width="650px">
+</p>
+<p align="center"><em>Figura 23 – Alterar despesa - opção de editar uma despesa.</em></p>
+
+<p align="center">
+  <img src="./img/24-alterar-despesa.png" width="650px">
+</p>
+<p align="center"><em>Figura 24 – Alteração de despesa.</em></p>
+
 ---
 
 ### US10- Excluir Despesa
@@ -164,7 +282,17 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Regras de Negócio** | **RN01 (Segurança de Acesso):** A query garante a propriedade do dado (`WHERE id = ? AND user_id = ?`). O usuário não consegue excluir despesa de outro.<br>**RN02 (Ausência de Estorno):** **Importante:** A exclusão do registro **não** dispara a devolução do valor ao saldo do método de pagamento. Se a despesa foi no débito, o saldo permanecerá reduzido mesmo após a exclusão.<br>**RN03 (Hard Delete):** A exclusão é física (remove a linha do banco), não lógica (não usa flag `deleted_at`). |
 | **Evidência (Backend)** | **Arquivo:** `deleteExpense.php`<br>• *RN01:* `DELETE FROM expenses WHERE id = ? AND user_id = ?`<br>• *RN02:* (Evidência por ausência): Não existem comandos `UPDATE payment_methods` neste arquivo.<br>• *RN03:* Uso do comando SQL `DELETE` direto. |
 
-#### Evidência (Interface): 
+#### Evidência (Interface):
+
+<p align="center">
+  <img src="./img/25-excluir-despesa.png" width="650px">
+</p>
+<p align="center"><em>Figura 25 – Confirmação de exclusão de despesa.</em></p>
+
+<p align="center">
+  <img src="./img/26-excluir-despesa.png" width="650px">
+</p>
+<p align="center"><em>Figura 26 – Despesa removida da lista após confirmação.</em></p>
 
 ---
 
@@ -179,7 +307,17 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Regras de Negócio** | **RN01 (Condicional de Débito):** O cálculo só é executado se `payment_type !== 'credit'`.<br>**RN02 (Matemática de Subtração):** A atualização é feita via operação direta no banco: `balance = balance - valor`.<br>**RN03 (Vínculo de Pagamento):** O sistema marca a despesa como "Paga" (`paid = 1`) no mesmo momento em que desconta do saldo. |
 | **Evidência (Backend)** | **Arquivo:** `addExpense.php` (Mesmo arquivo da US08)<br>• *RN01:* `if ($payment_type !== 'credit')`<br>• *RN02:* `UPDATE payment_methods SET balance = balance - ?`<br>• *RN03:* `UPDATE expenses SET paid = 1 ...` |
 
-#### Evidência (Interface): 
+#### Evidência (Interface):
+
+<p align="center">
+  <img src="./img/27-calcular-saldo-automatico.png" width="650px">
+</p>
+<p align="center"><em>Figura 27 – Atualização automática do saldo após operação.</em></p>
+
+<p align="center">
+  <img src="./img/28-calcular-saldo-automatico.png" width="650px">
+</p>
+<p align="center"><em>Figura 28 – Distribuição de gastos atualizada automaticamente.</em></p>
 
 ---
 
@@ -194,7 +332,12 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Regras de Negócio** | **RN01 (Privacidade dos Dados):** A consulta deve filtrar estritamente pelo ID do usuário (`WHERE user_id = ?`), impedindo acesso a dados de outros usuários.<br>**RN02 (Ordenação Padrão):** A visualização padrão é sempre decrescente por data (`ORDER BY date DESC`).<br>**RN03 (Enriquecimento de Dados):** O sistema realiza um `JOIN` obrigatório com a tabela `payment_methods` para obter o nome do método. <br>**RN04 (Contrato de API):** Os campos são renomeados na query (`AS expense_id`, `AS total_amount`) para corresponder exatamente ao que o componente visual (`ExpenseList.jsx`) espera. |
 | **Evidência (Backend)** | **Arquivo:** `getExpenses.php`<br>• *RN01:* `WHERE e.user_id = ?`<br>• *RN02:* `ORDER BY e.date DESC`<br>• *RN03:* `JOIN payment_methods pm ON e.payment_method_id = pm.id`<br>• *RN04:* `e.id AS expense_id, e.amount AS total_amount` |
 
-#### Evidência (Interface): 
+#### Evidência (Interface):
+
+<p align="center">
+  <img src="./img/29-listagem-despesa.png" width="650px">
+</p>
+<p align="center"><em>Figura 29 – Listagem de Histórico de despesas.</em></p>
 
 ---
 
@@ -209,7 +352,12 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Regras de Negócio** | **RN01 (Processamento no Cliente):** O backend não entrega o resumo pronto. O Frontend busca a lista completa (`getExpenses.php`) e realiza a soma/agrupamento localmente para renderizar o gráfico.<br>**RN02 (Dependência de Dados):** O gráfico depende do sucesso de duas requisições simultâneas: `getExpenses` e `getPaymentMethods`.<br>**RN03 (Tratamento de Datas):** As datas vindas do banco (String "YYYY-MM-DD") são convertidas para objetos `Date` do JavaScript para evitar erros de fuso horário na visualização.<br>**RN04 (Segurança de Sessão Frontend):** O acesso à página é bloqueado via JavaScript (`sessionStorage`) antes mesmo de chamar a API, redirecionando para `/login` se o usuário não existir. |
 | **Evidência (Backend)** | **Arquivo:** `home.jsx`<br>• *RN01/RN02:* Passagem de dados brutos para o componente visual: `<Dashboard expenses={expenses} ... />`<br>• *RN03:* `const correctedDate = new Date(year, month - 1, day);`<br>• *RN04:* `if (!user) { navigate("/login"); return; }` |
 
-#### Evidência (Interface): 
+#### Evidência (Interface):
+
+<p align="center">
+  <img src="./img/30-exibir-resumo-financeiro.png" width="650px">
+</p>
+<p align="center"><em>Figura 30 – Resumo financeiro com gráfico de distribuição de gastos.</em></p>
 
 ---
 
@@ -224,7 +372,17 @@ Os três elementos são: (a) Descrição da história de usuário; (b) Critério
 | **Regras de Negócio** | **RN01 (Limpeza Profunda):** O sistema aplica uma abordagem de duas etapas: primeiro remove as variáveis (`session_unset`) e depois destrói a sessão física no servidor (`session_destroy`). Isso evita que dados residuais permaneçam acessíveis na mesma execução.<br>**RN02 (Gerenciamento de Contexto):** O comando `session_start()` é chamado antes da destruição para garantir que o PHP identifique corretamente qual sessão ativa deve ser eliminada.<br>**RN03 (CORS e Credenciais):** O header `Access-Control-Allow-Credentials: true` é mantido para permitir que o navegador gerencie (e invalide) o cookie de sessão corretamente. |
 | **Evidência (Backend)** | **Arquivo:** `logout.php`<br>• *RN01:* Sequência: `session_unset(); session_destroy();`<br>• *RN02:* `session_start();` (linha inicial)<br>• *RN03:* `header("Access-Control-Allow-Credentials: true");` |
 
-#### Evidência (Interface): 
+#### Evidência (Interface):
+
+<p align="center">
+  <img src="./img/31-logout-sistema.png" width="650px">
+</p>
+<p align="center"><em>Figura 31 – Menu de usuário exibindo opção de sair do sistema.</em></p>
+
+<p align="center">
+  <img src="./img/32-logout-sistema.png" width="650px">
+</p>
+<p align="center"><em>Figura 32 – Redirecionamento para a página inicial após realizar logout.</em></p>
 
 ---
 
