@@ -109,7 +109,7 @@ Este diagrama representa o fluxo de validação de login, incluindo a entrada da
 </p>
 
 <p style="text-align: center;">
-  <img src="img/DS_validacao_login_usuario.jpg" alt="Diagrama de Sequência - Validação de Login de Usuário" />
+  <img src="img/DS_validacao_login_usuario.png" alt="Diagrama de Sequência - Validação de Login de Usuário" />
 </p>
 
 ---
@@ -121,7 +121,7 @@ Este diagrama ilustra o processo de alteração de senha de um usuário autentic
 </p>
 
 <p style="text-align: center;">
-  <img src="img/DS_alteracao_senha.jpg" alt="Diagrama de Sequência - Alteração de Senha" />
+  <img src="img/DS_alteracao_senha.png" alt="Diagrama de Sequência - Alteração de Senha" />
 </p>
 
 ---
@@ -150,10 +150,10 @@ Este diagrama descreve o fluxo de cadastro de um novo método de pagamento (como
 
 ---
 
-#### 3.2.6 Diagrama de Sequência – Atualizar Saldo de Cartões (Limite e Saldo em Conta Corrente)
+#### 3.2.6 Diagrama de Sequência – Atualizar Saldo de Cartões
 
 <p style="text-align: justify;">
-Neste diagrama é representado o fluxo de atualização de saldo ou limite de um método de pagamento. O usuário informa o novo valor, o frontend envia a requisição de atualização ao backend, que valida a permissão de acesso e atualiza o saldo ou limite na base de dados, retornando o resultado ao frontend.
+Neste diagrama é representado o fluxo de atualização de saldo de um método de pagamento. O usuário informa o novo valor, o frontend envia a requisição de atualização ao backend, que valida a permissão de acesso e atualiza o saldo na base de dados, retornando o resultado ao frontend.
 </p>
 
 <p style="text-align: center;">
@@ -177,7 +177,7 @@ Este diagrama apresenta o fluxo para exclusão de um método de pagamento. O bac
 #### 3.2.8 Diagrama de Sequência – Cadastro de Despesas no Cartão de Crédito
 
 <p style="text-align: justify;">
-Este diagrama detalha o fluxo de cadastro de uma despesa utilizando cartão de crédito. Inclui a seleção do método de pagamento, o envio das informações de despesa ao backend, a verificação de limite disponível, o registro da despesa na base de dados e a atualização do valor utilizado do limite de crédito, além do retorno de sucesso ou erro ao usuário.
+Este diagrama detalha o fluxo de cadastro de uma despesa utilizando cartão de crédito. Inclui a seleção do método de pagamento, o envio das informações de despesa ao backend e o registro da despesa na base de dados, além do retorno de sucesso ou erro ao usuário.
 </p>
 
 <p style="text-align: center;">
@@ -201,7 +201,7 @@ Este diagrama descreve o fluxo de cadastro de despesa utilizando cartão de déb
 #### 3.2.10 Diagrama de Sequência – Alterar Despesa
 
 <p style="text-align: justify;">
-Este diagrama representa o processo de alteração de uma despesa previamente registrada. O fluxo compreende a recuperação dos dados atuais da despesa, a validação das novas informações, o ajuste de saldos ou limites (quando necessário) e a atualização do registro no banco de dados.
+Este diagrama representa o processo de alteração de uma despesa previamente registrada. O fluxo compreende a recuperação dos dados atuais da despesa, a validação das novas informações, o ajuste de saldos (quando necessário) e a atualização do registro no banco de dados.
 </p>
 
 <p style="text-align: center;">
@@ -213,7 +213,7 @@ Este diagrama representa o processo de alteração de uma despesa previamente re
 #### 3.2.11 Diagrama de Sequência – Excluir Despesa
 
 <p style="text-align: justify;">
-Neste diagrama é apresentado o fluxo de exclusão de uma despesa. Além da remoção do registro de despesa no banco de dados, podem ser realizados ajustes nos saldos ou limites do método de pagamento associado (por exemplo, recompondo o saldo de conta ou liberando limite de crédito), garantindo a consistência das informações financeiras do usuário.
+Neste diagrama é apresentado o fluxo de exclusão de uma despesa. Além da remoção do registro de despesa no banco de dados, podem ser realizados ajustes nos saldos do método de pagamento associado (por exemplo, recompondo o saldo de conta), garantindo a consistência das informações financeiras do usuário.
 </p>
 
 <p style="text-align: center;">
@@ -231,3 +231,18 @@ Este diagrama descreve o fluxo para cálculo do saldo projetado após uma possí
 <p style="text-align: center;">
   <img src="img/DS_calcular_saldo_apos_compra_debito.jpg" alt="Diagrama de Sequência - Cálculo de Saldo Após Compra no Débito" />
 </p>
+
+
+#### 3.2.13 Diagrama de Sequência – Logout de Usuário
+
+<p style="text-align: justify;">
+Este diagrama descreve o fluxo de encerramento da sessão do usuário no Sistema de Finanças Pessoais. O processo tem início quando o usuário, já autenticado, aciona a opção de logout na interface do sistema. A partir dessa ação, o frontend envia uma requisição ao backend solicitando a finalização da sessão ativa.
+</p>
+<p style="text-align: justify;">
+Ao receber a solicitação, o backend identifica a sessão associada ao usuário e executa os procedimentos necessários para sua invalidação, eliminando as variáveis de sessão e destruindo o identificador que mantém o usuário autenticado. Em seguida, o sistema confirma a conclusão da operação ao frontend, que remove os dados locais de autenticação e redireciona o usuário para a tela de login, impedindo novos acessos sem uma nova autenticação.
+</p>
+<p style="text-align: center;">
+  <img src="img/DS_logout.jpg" alt="Diagrama de Sequência - Cálculo de Saldo Após Compra no Débito" />
+</p>
+
+
