@@ -231,3 +231,17 @@ Este diagrama descreve o fluxo para cálculo do saldo projetado após uma possí
 <p style="text-align: center;">
   <img src="img/DS_calcular_saldo_apos_compra_debito.jpg" alt="Diagrama de Sequência - Cálculo de Saldo Após Compra no Débito" />
 </p>
+
+
+#### 3.2.13 Diagrama de Sequência – Logout de Usuário
+
+<p style="text-align: justify;">
+Este diagrama descreve o fluxo de encerramento da sessão do usuário no Sistema de Finanças Pessoais. O processo tem início quando o usuário, já autenticado, aciona a opção de logout na interface do sistema. A partir dessa ação, o frontend envia uma requisição ao backend solicitando a finalização da sessão ativa.
+</p>
+<p style="text-align: justify;">
+Ao receber a solicitação, o backend identifica a sessão associada ao usuário e executa os procedimentos necessários para sua invalidação, eliminando as variáveis de sessão e destruindo o identificador que mantém o usuário autenticado. Em seguida, o sistema confirma a conclusão da operação ao frontend, que remove os dados locais de autenticação e redireciona o usuário para a tela de login, impedindo novos acessos sem uma nova autenticação.
+</p>
+<p style="text-align: center;">
+  <img src="img/DS_logout.jpg" alt="Diagrama de Sequência - Logout de Usuário />
+</p>
+
