@@ -242,6 +242,7 @@ Este diagrama descreve o fluxo de encerramento da sessão do usuário no Sistema
 Ao receber a solicitação, o backend identifica a sessão associada ao usuário e executa os procedimentos necessários para sua invalidação, eliminando as variáveis de sessão e destruindo o identificador que mantém o usuário autenticado. Em seguida, o sistema confirma a conclusão da operação ao frontend, que remove os dados locais de autenticação e redireciona o usuário para a tela de login, impedindo novos acessos sem uma nova autenticação.
 </p>
 <p style="text-align: center;">
-  <img src="img/DS_logout.jpg" alt="Diagrama de Sequência - Logout de Usuário />
+  <img src="img/DS_logout.jpg" alt="Diagrama de Sequência - Cálculo de Saldo Após Compra no Débito" />
 </p>
+
 
