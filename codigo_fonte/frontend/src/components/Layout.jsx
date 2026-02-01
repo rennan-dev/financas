@@ -48,10 +48,10 @@ function Layout({ children }) {
           </h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <UserCircle className="h-5 w-5" />
-                {user.email}
-              </Button>
+            <Button variant="ghost" className="flex items-center gap-2 px-2">
+              <UserCircle className="h-6 w-6" />
+              <span className="hidden sm:inline">{user.email}</span>
+            </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => navigate("/profile")}>
@@ -72,7 +72,7 @@ function Layout({ children }) {
 
       <footer className="border-t py-4">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © 2024 Rennan Alves. Todos os direitos reservados.
+          © 2025 Rennan Alves. Todos os direitos reservados.
         </div>
       </footer>
     </div>
