@@ -6,8 +6,14 @@ import Dashboard from "@/components/Dashboard";
 import AddExpenseDialog from "@/components/AddExpenseDialog";
 import AddPaymentMethodDialog from "@/components/AddPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, CreditCard, Wallet, Banknote } from "lucide-react";
 import EditExpenseDialog from "@/components/EditExpenseDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function Home() {
   const navigate = useNavigate();
@@ -21,66 +27,16 @@ function Home() {
   const [expenseToEdit, setExpenseToEdit] = useState(null);
 
   useEffect(() => {
-    const user = sessionStorage.getItem("user");
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    const userObj = JSON.parse(user);
-    const user_id = userObj.id;
-
-    // Buscar despesas
-    fetch(`http://localhost/api_financas/getExpenses.php?user_id=${user_id}`, {
-      method: "GET",
-      credentials: "include",
-    })
-      .then(response => response.json())
-      .then(data => {
-        const expensesParsed = data.map(expense => {
-          const [year, month, day] = expense.expense_date.split("-");
-          const correctedDate = new Date(year, month - 1, day);
-
-          let correctedDueDate = null;
-          if (expense.due_date) {
-            const [dueYear, dueMonth, dueDay] = expense.due_date.split("-");
-            correctedDueDate = new Date(dueYear, dueMonth - 1, dueDay);
-          }
-
-          return {
-            ...expense,
-            amount: parseFloat(expense.amount),
-            expense_date: correctedDate,
-            due_date: correctedDueDate ?? expense.due_date,
-          };
-        });
-        setExpenses(expensesParsed);
-      })
-      .catch(error => console.error("Erro ao buscar despesas:", error));
-
-    // Buscar métodos de pagamento
-    fetch(`http://localhost/api_financas/getPaymentMethods.php?user_id=${user_id}`, {
-      method: "GET",
-      credentials: "include",
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === "success") {
-          const methods = data.paymentMethods.map(method => ({
-            ...method,
-            balance: parseFloat(method.balance || 0),
-          }));
-          setPaymentMethods(methods);
-        } else {
-          console.error("Erro:", data.message);
-        }
-      })
-      .catch(error => console.error("Erro ao buscar métodos de pagamento:", error));
+    fetchExpenses();
+    fetchPaymentMethods();
   }, [navigate]);
 
   const fetchExpenses = () => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
 
     fetch(`http://localhost/api_financas/getExpenses.php?user_id=${user.id}`, {
       method: "GET",
@@ -135,10 +91,7 @@ function Home() {
 
   const handleAddExpense = async (expense) => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) {
-      console.error("Usuário não encontrado na sessão");
-      return;
-    }
+    if (!user) return;
 
     const body = {
       user_id: user.id,
@@ -161,10 +114,8 @@ function Home() {
       const data = await response.json();
 
       if (data.status === "success") {
-        // Atualiza as listagens
         fetchExpenses();
         fetchPaymentMethods();
-
         toast({
           title: "Compra registrada!",
           description: "A compra foi adicionada com sucesso.",
@@ -194,10 +145,7 @@ function Home() {
       (m) => m.id === parseInt(expense.paymentMethod)
     );
 
-    if (!selectedMethod) {
-      console.error("Método de pagamento não encontrado");
-      return;
-    }
+    if (!selectedMethod) return;
 
     const payload = {
       user_id: user.id,
@@ -258,7 +206,6 @@ function Home() {
       const success = await updateBalance(user.id, paymentMethodId, newBalance);
 
       if (success) {
-        // Atualiza o método localmente
         setPaymentMethods((prevMethods) =>
           prevMethods.map((method) =>
             method.id === paymentMethodId
@@ -266,8 +213,6 @@ function Home() {
               : method
           )
         );
-
-        // Recarrega os métodos do backend para garantir sincronização
         fetchPaymentMethods();
       }
   };
@@ -324,14 +269,7 @@ function Home() {
       });
       const data = await response.json();
 
-      if (!response.ok) {
-        toast({
-          title: "Erro ao atualizar saldo",
-          description: data.message || "Erro desconhecido",
-          variant: "destructive",
-        });
-        return false;
-      }
+      if (!response.ok) return false;
 
       if (data.status === "success") {
         toast({ title: "Saldo atualizado", description: data.message });
@@ -346,11 +284,6 @@ function Home() {
       }
     } catch (error) {
       console.error("Erro ao atualizar saldo:", error);
-      toast({
-        title: "Erro ao atualizar saldo",
-        description: "Ocorreu um erro ao atualizar o saldo",
-        variant: "destructive",
-      });
       return false;
     }
   };
@@ -361,7 +294,6 @@ function Home() {
   };
 
   const handleSaveEditedExpense = async (updatedExpense) => {
-
     const user = JSON.parse(sessionStorage.getItem("user"));
     if (!user) return;
 
@@ -383,50 +315,31 @@ function Home() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-         console.error("Erro HTTP:", response.status, response.statusText);
-         throw new Error(`Erro no servidor: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Erro no servidor: ${response.status}`);
 
       const data = await response.json();
 
       if (data.status === "success") {
-        toast({
-          title: "Sucesso!",
-          description: "Despesa atualizada.",
-        });
-        
+        toast({ title: "Sucesso!", description: "Despesa atualizada." });
         fetchExpenses();
         fetchPaymentMethods();
         setShowEditDialog(false);
       } else {
-        toast({
-          title: "Erro ao salvar",
-          description: data.message || "Ocorreu um erro desconhecido.",
-          variant: "destructive",
-        });
+        toast({ title: "Erro ao salvar", description: data.message, variant: "destructive" });
       }
     } catch (error) {
-      console.error("Erro Catastrófico:", error);
-      toast({ 
-          title: "Erro de Conexão", 
-          description: error.message, 
-          variant: "destructive" 
-      });
+      toast({ title: "Erro de Conexão", description: error.message, variant: "destructive" });
     }
   };
 
   const handleDeleteExpense = async (expense) => {
     const confirmDelete = window.confirm(
-      `Tem certeza que deseja excluir a despesa: "${expense.description}"?\n\nSe foi no Débito, o valor será devolvido ao saldo.`
+      `Tem certeza que deseja excluir a despesa: "${expense.description}"?`
     );
-    
     if (!confirmDelete) return;
 
     const user = JSON.parse(sessionStorage.getItem("user"));
     if (!user) return;
-
-    const expenseIdToDelete = expense.expense_id || expense.id;
 
     try {
       const response = await fetch("http://localhost/api_financas/deleteExpense.php", {
@@ -435,71 +348,53 @@ function Home() {
         credentials: "include",
         body: JSON.stringify({
           user_id: user.id,
-          expense_id: expenseIdToDelete
+          expense_id: expense.expense_id || expense.id
         }),
       });
 
       const data = await response.json();
 
       if (data.status === "success") {
-        toast({
-          title: "Despesa Excluída",
-          description: "O registro foi apagado com sucesso.",
-        });
-
+        toast({ title: "Despesa Excluída", description: "O registro foi apagado com sucesso." });
         fetchExpenses();
         fetchPaymentMethods();
       } else {
-        toast({
-          title: "Erro ao excluir",
-          description: data.message || "Erro desconhecido.",
-          variant: "destructive",
-        });
+        toast({ title: "Erro ao excluir", description: data.message, variant: "destructive" });
       }
     } catch (error) {
-      console.error("Erro ao excluir:", error);
-      toast({
-        title: "Erro de conexão",
-        description: "Não foi possível comunicar com o servidor.",
-        variant: "destructive",
-      });
+      toast({ title: "Erro de conexão", description: "Não foi possível comunicar com o servidor.", variant: "destructive" });
     }
   };
 
   return (
     <Layout>
-      <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-primary/20 to-muted px-4 py-10">
-        <div className="w-full max-w-6xl space-y-10">
-          <div className="flex flex-wrap justify-between gap-4 items-center">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
-              Painel Financeiro 📊
-            </h1>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => setShowAddPaymentMethod(true)}
-                variant="outline"
-                className="backdrop-blur-md"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Cartão
-              </Button>
-              <Button
-                onClick={() => setShowAddExpense(true)}
-                variant="secondary"
-                className="backdrop-blur-md"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Compra no Débito
-              </Button>
-              <Button
-                onClick={() => setShowAddCreditExpense(true)}
-                variant="secondary"
-                className="backdrop-blur-md"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Compra no Crédito
-              </Button>
-            </div>
+      <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-primary/20 to-muted px-4 py-8">
+        <div className="w-full max-w-6xl space-y-6">
+          
+          {/* BOTÃO DE AÇÃO PRINCIPAL */}
+          <div className="flex justify-end w-full">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="w-full sm:w-auto gap-2 font-semibold shadow-lg bg-background text-foreground border border-border hover:bg-muted transition-all active:scale-95">
+                  <Plus className="h-5 w-5" />
+                  Nova Transação
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setShowAddExpense(true)} className="cursor-pointer gap-2 p-3">
+                  <Banknote className="h-4 w-4 text-green-500" /> 
+                  <span>Novo Débito</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowAddCreditExpense(true)} className="cursor-pointer gap-2 p-3">
+                  <CreditCard className="h-4 w-4 text-blue-500" /> 
+                  <span>Novo Crédito</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowAddPaymentMethod(true)} className="cursor-pointer gap-2 p-3 border-t">
+                  <Wallet className="h-4 w-4 text-orange-500" /> 
+                  <span>Novo Cartão/Conta</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="bg-card/90 backdrop-blur-md border border-border rounded-xl shadow-md p-6">
@@ -515,6 +410,7 @@ function Home() {
           </div>
         </div>
 
+        {/* DIALOGS */}
         <AddExpenseDialog
           open={showAddExpense}
           onOpenChange={setShowAddExpense}

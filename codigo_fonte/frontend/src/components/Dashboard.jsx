@@ -9,46 +9,53 @@ import {
   Tooltip
 } from "recharts";
 import { Button } from "@/components/ui/button";
+import { Wallet, TrendingDown } from "lucide-react";
 import ExpenseList from "@/components/ExpenseList";
 import MonthSelector from "@/components/MonthSelector";
 import UpdateBalanceDialog from "@/components/UpdateBalanceDialog";
+
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card text-card-foreground p-2 border border-border rounded-lg shadow-sm text-sm font-medium">
+        <span style={{ color: payload[0].payload.fill, marginRight: "5px" }}>
+          ●
+        </span>
+        {payload[0].name}: R$ {payload[0].value.toFixed(2)}
+      </div>
+    );
+  }
+  return null;
+};
 
 function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, onEditExpense, onDeleteExpense }) {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [showUpdateBalance, setShowUpdateBalance] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
 
+  // LÓGICA DE FILTRO
   const filteredExpenses = expenses.filter(expense => {
-    const expenseDate = expense.installment_id ? expense.due_date : expense.expense_date;  
+    const expenseDate = expense.installment_id ? expense.due_date : expense.expense_date; 
+    const dateObj = expenseDate instanceof Date ? expenseDate : new Date(expenseDate);
     return (
-      expenseDate.getMonth() === selectedMonth.getMonth() &&
-      expenseDate.getFullYear() === selectedMonth.getFullYear()
+      dateObj.getMonth() === selectedMonth.getMonth() &&
+      dateObj.getFullYear() === selectedMonth.getFullYear()
     );
   });
-  
 
+  // CÁLCULO DE TOTAIS
   const totalExpenses = filteredExpenses.reduce((acc, expense) => {
-    //verifica se é uma parcela; se sim, usa installment_amount, senão, total_amount
     const valueStr = expense.installment_id ? expense.installment_amount : expense.total_amount;
-    
-    //caso haja possibilidade de valores com vírgula (por exemplo, "260,00")
     const normalizedValueStr = typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr;
-    
     const amount = parseFloat(normalizedValueStr);
-    
-    //se a conversão falhar, soma 0
     return acc + (isNaN(amount) ? 0 : amount);
   }, 0);
-  
-  
 
   const expensesByType = filteredExpenses.reduce((acc, expense) => {
-    //usa installment_amount se for parcela, senão usa total_amount
     const expenseValue = expense.installment_id 
       ? parseFloat(expense.installment_amount)
       : parseFloat(expense.total_amount);
     
-    //determina o tipo com base no campo payment_type (observe o underline)
     const type = expense.payment_type === 'credit' ? 'Crédito' : 
                  expense.payment_type === 'debit'  ? 'Débito'  : 'Dinheiro';
     
@@ -56,37 +63,37 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
     acc[type] += isNaN(expenseValue) ? 0 : expenseValue;
     return acc;
   }, {});
-  
-  
 
   const chartData = Object.entries(expensesByType).map(([name, value]) => ({
     name,
     value
   }));
 
-  const debitMethods = paymentMethods
-    .filter(m => m.type !== 'credit')
-    .sort((a, b) => b.balance - a.balance)
-    .slice(0, 3);
-
   const colorMapping = {
-    "Crédito": "#00C49F", //verde
-    "Débito": "#0088FE",  //azul
-    "Dinheiro": "#FFA500" //laranja
+    "Crédito": "#00C49F",
+    "Débito": "#0088FE",
+    "Dinheiro": "#FFA500"
   };
 
   return (
-    <div className="w-full">
-      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          {/* CARD SALDO */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full p-6 rounded-2xl bg-card/90 backdrop-blur-md border border-border shadow-md"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Saldo Total</h2>
+    <div className="w-full space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* CARD DE SALDOS E CONTAS */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="lg:col-span-1 space-y-4"
+        >
+          {/* Container Saldo Total */}
+          <div className="p-6 rounded-2xl bg-card border border-border shadow-md">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Saldo Total</p>
+                <h2 className="text-3xl sm:text-4xl font-bold mt-1 text-primary">
+                  R$ {totalBalance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </h2>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -98,91 +105,113 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
                 Atualizar
               </Button>
             </div>
-            <div className="text-4xl font-bold text-primary mb-6">
-              R$ {totalBalance.toFixed(2)}
+            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 p-2 rounded-lg inline-flex">
+              <TrendingDown className="w-4 h-4" />
+              <span>Gasto no mês: R$ {totalExpenses.toFixed(2)}</span>
             </div>
-            <div className="space-y-4">
-              {debitMethods.map((method) => (
-                <div key={method.id} className="flex justify-between items-center p-3 bg-background rounded-lg">
-                  <span className="font-medium">{method.name}</span>
-                  <span className="text-lg">R$ {method.balance.toFixed(2)}</span>
+          </div>
+
+          {/* LISTA DE CONTAS */}
+          <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+            <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">
+              Minhas Contas
+            </h3>
+            
+            <div className="space-y-3 max-h-none lg:max-h-[210px] lg:overflow-y-auto lg:pr-2">
+              {paymentMethods
+                .filter(m => m.type !== 'credit')
+                .map((method) => (
+                <div 
+                  key={method.id}
+                  className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer border border-transparent hover:border-border"
+                  onClick={() => {
+                    setSelectedMethod(method);
+                    setShowUpdateBalance(true);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-background rounded-lg shadow-sm">
+                      <Wallet className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="font-medium text-sm">{method.name}</span>
+                  </div>
+                  <p className="font-bold text-sm">R$ {parseFloat(method.balance).toFixed(2)}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-4 text-muted-foreground">
-              Total de despesas no mês: R$ {totalExpenses.toFixed(2)}
-            </div>
-          </motion.div>
-  
-          {/* CARD GRÁFICO */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="w-full p-6 rounded-2xl bg-card/90 backdrop-blur-md border border-border shadow-md"
-          >
-            <h2 className="text-2xl font-semibold mb-6">Distribuição de Gastos</h2>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: R$ ${value.toFixed(2)}`}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={colorMapping[entry.name] || "#ccc"} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => `R$ ${value.toFixed(2)}`} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
-  
-          {/* CARD DESPESAS */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="col-span-1 lg:col-span-2 w-full p-6 rounded-2xl bg-card/90 backdrop-blur-md border border-border shadow-md"
-          >
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-              <h2 className="text-2xl font-semibold">Lista de Despesas</h2>
-              <MonthSelector
-                selectedMonth={selectedMonth}
-                onMonthChange={setSelectedMonth}
-              />
-            </div>
-            
-            <ExpenseList
-              expenses={filteredExpenses}
-              debitMethods={paymentMethods.filter((m) => m.type !== "credit")}
-              onEdit={onEditExpense}
-              onDelete={onDeleteExpense}
-            />
-          </motion.div>
-        </div>
-  
-        <UpdateBalanceDialog
-          open={showUpdateBalance}
-          onOpenChange={setShowUpdateBalance}
-          currentBalance={selectedMethod?.balance || 0}
-          methodName={selectedMethod?.name || ''}
-          selectedMethodId={selectedMethod?.id || ""}
-          onUpdateBalance={onUpdateBalance}
-          paymentMethods={paymentMethods}
-        />
+          </div>
+        </motion.div>
+
+        {/* GRÁFICO */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="lg:col-span-1 w-full p-4 rounded-2xl bg-card border border-border shadow-md flex flex-col"
+        >
+          <h2 className="text-sm font-medium text-muted-foreground">Distribuição de Gastos</h2>
+          
+          <div className="h-[220px] sm:h-[250px] w-full flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius="70%" 
+                  fill="#8884d8"
+                  dataKey="value"
+                  stroke="none"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  style={{ fontSize: '12px' }} // Garante que o texto não fique gigante
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={colorMapping[entry.name] || "#ccc"} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
       </div>
+
+      {/* LISTA DE DESPESAS */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full p-4 sm:p-6 rounded-2xl bg-card border border-border shadow-md"
+      >
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+          <h2 className="text-sm font-medium text-muted-foreground">Lista de Despesas</h2>
+          <MonthSelector
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
+        </div>
+        
+        <div className="overflow-x-auto">
+          <ExpenseList
+            expenses={filteredExpenses}
+            debitMethods={paymentMethods.filter((m) => m.type !== "credit")}
+            onEdit={onEditExpense}
+            onDelete={onDeleteExpense}
+          />
+        </div>
+      </motion.div>
+
+      <UpdateBalanceDialog
+        open={showUpdateBalance}
+        onOpenChange={setShowUpdateBalance}
+        currentBalance={selectedMethod?.balance || 0}
+        methodName={selectedMethod?.name || ''}
+        selectedMethodId={selectedMethod?.id || ""}
+        onUpdateBalance={onUpdateBalance}
+        paymentMethods={paymentMethods} 
+      />
     </div>
   );
-  
 }
 
 export default Dashboard;
