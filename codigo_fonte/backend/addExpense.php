@@ -47,13 +47,18 @@ $stmt->close();
 
 // Se o pagamento não for de crédito, marque como pago e atualize o saldo
 if ($payment_type !== 'credit') {
-    // Atualiza o saldo do método de pagamento, subtraindo o valor da compra
-    $stmt2 = $conn->prepare("UPDATE payment_methods SET balance = balance - ? WHERE id = ?");
+    // Define se vai somar ou subtrair
+    // Se for deposit, o operador é +, caso contrário (debit/money) é -
+    $operator = ($payment_type === 'deposit') ? "+" : "-";
+    
+    // Atualiza o saldo do método de pagamento
+    $sqlBalance = "UPDATE payment_methods SET balance = balance $operator ? WHERE id = ?";
+    $stmt2 = $conn->prepare($sqlBalance);
     $stmt2->bind_param("di", $amount, $payment_method_id);
     $stmt2->execute();
     $stmt2->close();
 
-    // Marca a despesa como paga e associa o id do método utilizado
+    // Marca como paga (depósitos são considerados "efetivados" na hora)
     $stmt3 = $conn->prepare("UPDATE expenses SET paid = 1, paid_with_method_id = ? WHERE id = ?");
     $stmt3->bind_param("ii", $payment_method_id, $expense_id);
     $stmt3->execute();

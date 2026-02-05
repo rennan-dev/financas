@@ -12,18 +12,51 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 function ExpenseList({ expenses, onEdit, onDelete }) { 
-
   const getPaymentTypeLabel = (type) => {
     if (type === "credit") return "Crédito";
     if (type === "debit") return "Débito";
+    if (type === "deposit") return "Depósito";
     return "Dinheiro";
+  };
+
+  // Função auxiliar para renderizar a Badge (etiqueta) com a cor correta
+  const renderPaymentBadge = (type) => {
+    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
+    
+    switch (type) {
+      case "credit":
+        return (
+          <span className={`${baseClasses} bg-green-100 text-green-800`}>
+            Crédito
+          </span>
+        );
+      case "debit":
+        return (
+          <span className={`${baseClasses} bg-blue-100 text-blue-800`}>
+            Débito
+          </span>
+        );
+      case "deposit":
+        return (
+          <span className={`${baseClasses} bg-purple-100 text-purple-800`}>
+            Depósito
+          </span>
+        );
+      default:
+        // Fallback para 'money' ou outros
+        return (
+          <span className={`${baseClasses} bg-gray-100 text-gray-800`}>
+            Dinheiro
+          </span>
+        );
+    }
   };
 
   return (
     <div className="space-y-4">
       {expenses.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
-          Nenhuma despesa registrada neste mês
+          Nenhuma transação registrada neste mês
         </div>
       ) : (
         expenses.map((expense, index) => {
@@ -90,15 +123,7 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
                   )}
                 </div>
 
-                {expense.payment_type === "credit" ? (
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Crédito
-                  </span>
-                ) : (
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    Débito
-                  </span>
-                )}
+                {renderPaymentBadge(expense.payment_type)}
 
                 {/* MENU DE AÇÕES */}
                 <DropdownMenu>
