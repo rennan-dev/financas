@@ -6,7 +6,7 @@ import Dashboard from "@/components/Dashboard";
 import AddExpenseDialog from "@/components/AddExpenseDialog";
 import AddPaymentMethodDialog from "@/components/AddPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, CreditCard, Wallet, Banknote } from "lucide-react";
+import { Plus, CreditCard, Wallet, Banknote, TrendingUp } from "lucide-react";
 import EditExpenseDialog from "@/components/EditExpenseDialog";
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ function Home() {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddPaymentMethod, setShowAddPaymentMethod] = useState(false);
   const [showAddCreditExpense, setShowAddCreditExpense] = useState(false);
+  const [showAddDeposit, setShowAddDeposit] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState(null);
 
@@ -87,6 +88,35 @@ function Home() {
         }
       })
       .catch(error => console.error("Erro ao buscar métodos de pagamento:", error));
+  };
+
+  const handleAddDeposit = async (data) => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    const body = {
+      user_id: user.id,
+      payment_method_id: data.paymentMethod,
+      description: data.description,
+      amount: data.amount,
+      date: data.date,
+      payment_type: 'deposit',
+      installments: 1
+    };
+
+    try {
+      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const result = await response.json();
+      if (result.status === "success") {
+        fetchExpenses();
+        fetchPaymentMethods();
+        toast({ title: "Depósito realizado!", description: "Saldo atualizado com sucesso." });
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleAddExpense = async (expense) => {
@@ -381,6 +411,10 @@ function Home() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setShowAddDeposit(true)} className="cursor-pointer gap-2 p-3">
+                  <TrendingUp className="h-4 w-4 text-emerald-500" /> 
+                  <span>Novo Depósito (Entrada)</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowAddExpense(true)} className="cursor-pointer gap-2 p-3">
                   <Banknote className="h-4 w-4 text-green-500" /> 
                   <span>Novo Débito</span>
@@ -411,6 +445,14 @@ function Home() {
         </div>
 
         {/* DIALOGS */}
+        <AddExpenseDialog
+          open={showAddDeposit}
+          onOpenChange={setShowAddDeposit}
+          onAddExpense={handleAddDeposit}
+          paymentMethods={paymentMethods}
+          title="Registrar Entrada / Depósito"
+        />
+
         <AddExpenseDialog
           open={showAddExpense}
           onOpenChange={setShowAddExpense}
