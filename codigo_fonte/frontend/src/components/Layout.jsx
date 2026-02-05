@@ -15,7 +15,7 @@ function Layout({ children }) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost/api_financas/accounts/logout.php", {
+      const response = await fetch("http://financas.rennan-alves.com/api_financas/accounts/logout.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

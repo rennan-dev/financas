@@ -39,7 +39,7 @@ function Home() {
       return;
     }
 
-    fetch(`http://localhost/api_financas/getExpenses.php?user_id=${user.id}`, {
+    fetch(`http://financas.rennan-alves.com/api_financas/getExpenses.php?user_id=${user.id}`, {
       method: "GET",
       credentials: "include",
     })
@@ -71,7 +71,7 @@ function Home() {
     const user = JSON.parse(sessionStorage.getItem("user"));
     if (!user) return;
 
-    fetch(`http://localhost/api_financas/getPaymentMethods.php?user_id=${user.id}`, {
+    fetch(`http://financas.rennan-alves.com/api_financas/getPaymentMethods.php?user_id=${user.id}`, {
       method: "GET",
       credentials: "include",
     })
@@ -103,7 +103,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch("http://financas.rennan-alves.com/api_financas/addExpense.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -134,7 +134,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch("http://financas.rennan-alves.com/api_financas/addExpense.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -189,7 +189,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch("http://financas.rennan-alves.com/api_financas/addExpense.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -259,7 +259,7 @@ function Home() {
     if (!user) return;
 
     try {
-      const response = await fetch("http://localhost/api_financas/payCreditExpense.php", {
+      const response = await fetch("http://financas.rennan-alves.com/api_financas/payCreditExpense.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -291,7 +291,7 @@ function Home() {
 
   const updateBalance = async (user_id, paymentMethodId, newBalance) => {
     try {
-      const response = await fetch("http://localhost/api_financas/updateBalance.php", {
+      const response = await fetch("http://financas.rennan-alves.com/api_financas/updateBalance.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -338,7 +338,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/updateExpense.php", {
+      const response = await fetch("http://financas.rennan-alves.com/api_financas/updateExpense.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -372,7 +372,7 @@ function Home() {
     if (!user) return;
 
     try {
-      const response = await fetch("http://localhost/api_financas/deleteExpense.php", {
+      const response = await fetch("http://financas.rennan-alves.com/api_financas/deleteExpense.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
