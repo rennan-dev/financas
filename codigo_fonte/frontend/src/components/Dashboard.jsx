@@ -80,6 +80,8 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
 
   const totalExpenses = useMemo(() => {
     return filteredExpenses.reduce((acc, expense) => {
+
+      if(expense.payment_type === 'deposit') return acc; //ignora depósitos
       const valueStr = expense.installment_id ? expense.installment_amount : expense.total_amount;
       const normalizedValueStr = typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr;
       const amount = parseFloat(normalizedValueStr);
