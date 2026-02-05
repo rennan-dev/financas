@@ -29,7 +29,7 @@ function CreateAccount() {
     }
 
     try {
-      const response = await fetch("http://financas.rennan-alves.com/api_financas/register.php", {
+      const response = await fetch("http://localhost/api_financas/register.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

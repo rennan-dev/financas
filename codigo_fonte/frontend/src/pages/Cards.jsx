@@ -39,7 +39,7 @@ function Cards() {
       return;
     }
     const userObj = JSON.parse(user);
-    fetch(`http://financas.rennan-alves.com/api_financas/getPaymentMethods.php?user_id=${userObj.id}`, {
+    fetch(`http://localhost/api_financas/getPaymentMethods.php?user_id=${userObj.id}`, {
       method: "GET",
       credentials: "include",
     })
@@ -81,7 +81,7 @@ function Cards() {
 
   const handleConfirmDelete = () => {
     if (!selectedCard) return;
-    fetch(`http://financas.rennan-alves.com/api_financas/deletePaymentMethod.php?id=${selectedCard.id}`, {
+    fetch(`http://localhost/api_financas/deletePaymentMethod.php?id=${selectedCard.id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

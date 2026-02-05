@@ -18,7 +18,7 @@ function Login() {
 
     if (email && password) {
       try {
-        const response = await fetch("http://financas.rennan-alves.com/api_financas/login.php", {
+        const response = await fetch("http://localhost/api_financas/login.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

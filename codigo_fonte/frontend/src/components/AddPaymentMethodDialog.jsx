@@ -21,7 +21,7 @@ function AddPaymentMethodDialog({ open, onOpenChange, onAddPaymentMethod }) {
     const methodData = { user_id, name };
 
     try {
-      const response = await fetch("http://financas.rennan-alves.com/api_financas/addPaymentMethod.php", {
+      const response = await fetch("http://localhost/api_financas/addPaymentMethod.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
