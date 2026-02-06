@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
+import UpdateBalanceDialog from "@/components/UpdateBalanceDialog";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +14,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// Função para formatar data
 const formatDate = (dateString) => {
   const dateObj = new Date(dateString.replace(" ", "T"));
   if (isNaN(dateObj)) return dateString;
@@ -29,8 +30,14 @@ function Cards() {
   const { toast } = useToast();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Estados para Deletar
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+
+  // Estados para Editar Saldo
+  const [showUpdateBalance, setShowUpdateBalance] = useState(false);
+  const [cardToEdit, setCardToEdit] = useState(null);
 
   const fetchPaymentMethods = () => {
     const user = sessionStorage.getItem("user");
@@ -119,6 +126,60 @@ function Cards() {
       });
   };
 
+  // --- Lógica de Editar Saldo ---
+  const handleOpenEdit = (card) => {
+    setCardToEdit(card);
+    setShowUpdateBalance(true);
+  };
+
+  const handleUpdateBalance = async (paymentMethodId, newBalance) => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) return;
+
+    try {
+      const response = await fetch("http://localhost/api_financas/updateBalance.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ 
+            user_id: user.id, 
+            payment_method_id: paymentMethodId, 
+            newBalance 
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.message || "Erro na requisição");
+
+      if (data.status === "success") {
+        toast({ title: "Saldo atualizado", description: data.message });
+        
+        setCards((prevMethods) =>
+            prevMethods.map((method) =>
+              method.id === paymentMethodId
+                ? { ...method, balance: newBalance }
+                : method
+            )
+        );
+        setShowUpdateBalance(false);
+      } else {
+        toast({
+          title: "Erro ao atualizar saldo",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar saldo:", error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível atualizar o saldo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   if (loading) {
     return (
       <Layout>
@@ -154,29 +215,45 @@ function Cards() {
                       <span className="font-semibold text-foreground">Nome:</span> {card.name}
                     </p>
                     <p>
-                      <span className="font-semibold text-foreground">Tipo:</span> {card.type}
-                    </p>
-                    <p>
-                      <span className="font-semibold text-foreground">Saldo:</span> R$ {card.balance.toFixed(2)}
+                      <span className="font-semibold text-foreground">Saldo: </span> 
+                      <span className="text-muted-foreground text-sm mt-1">
+                         R$ {card.balance.toFixed(2)}
+                      </span>
                     </p>
                     <p>
                       <span className="font-semibold text-foreground">Criado em:</span>{" "}
                       {formatDate(card.created_at)}
                     </p>
                   </div>
-                  <Button
-                    variant="destructive"
-                    onClick={() => promptDelete(card)}
-                    className="w-full mt-4"
-                  >
-                    Deletar
-                  </Button>
+
+                  <div className="flex gap-2 mt-4">
+                    {/* Botão de Editar Saldo */}
+                    <Button
+                        variant="outline"
+                        onClick={() => handleOpenEdit(card)}
+                        className="h-8 flex-1 gap-2"
+                    >
+                        <Pencil className="h-4 w-4" />
+                        Editar
+                    </Button>
+
+                    {/* Botão de Deletar */}
+                    <Button
+                        variant="destructive"
+                        onClick={() => promptDelete(card)}
+                        className="h-8 flex-1 gap-2"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Excluir
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
 
+        {/* Dialog de Exclusão */}
         <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
           <DialogContent>
             <DialogHeader>
@@ -197,6 +274,18 @@ function Cards() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Dialog de Atualizar Saldo */}
+        {showUpdateBalance && (
+            <UpdateBalanceDialog
+                open={showUpdateBalance}
+                onOpenChange={setShowUpdateBalance}
+                currentBalance={cardToEdit?.balance}
+                selectedMethodId={cardToEdit?.id}
+                onUpdateBalance={handleUpdateBalance}
+                paymentMethods={cards}
+            />
+        )}
       </div>
     </Layout>
   );
