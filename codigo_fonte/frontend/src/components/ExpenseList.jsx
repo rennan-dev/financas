@@ -1,8 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { Repeat, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { 
+  Repeat, 
+  MoreVertical, 
+  Pencil, 
+  Trash2, 
+  Filter, 
+  CreditCard, 
+  Banknote, 
+  TrendingUp,
+  Settings 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +22,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-function ExpenseList({ expenses, onEdit, onDelete }) { 
+function ExpenseList({ expenses, onEdit, onDelete }) {
+  const navigate = useNavigate();
+  const [filter, setFilter] = useState("all");
+
   const getPaymentTypeLabel = (type) => {
     if (type === "credit") return "Crédito";
     if (type === "debit") return "Débito";
@@ -19,47 +33,97 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
     return "Dinheiro";
   };
 
-  // Função auxiliar para renderizar a Badge (etiqueta) com a cor correta
+  const filteredExpenses = expenses.filter((expense) => {
+    if (filter === "all") return true;
+    return expense.payment_type === filter;
+  });
+
   const renderPaymentBadge = (type) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     
     switch (type) {
       case "credit":
-        return (
-          <span className={`${baseClasses} bg-green-100 text-green-800`}>
-            Crédito
-          </span>
-        );
+        return <span className={`${baseClasses} bg-green-100 text-green-800`}>Crédito</span>;
       case "debit":
-        return (
-          <span className={`${baseClasses} bg-blue-100 text-blue-800`}>
-            Débito
-          </span>
-        );
+        return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>Débito</span>;
       case "deposit":
-        return (
-          <span className={`${baseClasses} bg-purple-100 text-purple-800`}>
-            Depósito
-          </span>
-        );
+        return <span className={`${baseClasses} bg-purple-100 text-purple-800`}>Depósito</span>;
       default:
-        // Fallback para 'money' ou outros
-        return (
-          <span className={`${baseClasses} bg-gray-100 text-gray-800`}>
-            Dinheiro
-          </span>
-        );
+        return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Dinheiro</span>;
     }
   };
 
+  //verifica se é modo de edição (Home)
+  const isHomeView = !!onEdit; 
+
   return (
     <div className="space-y-4">
-      {expenses.length === 0 ? (
-        <div className="text-center text-muted-foreground py-8">
-          Nenhuma transação registrada neste mês
+      {/*barra de Topo: Filtros + Botão de Cartões */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        
+        {/*grupo de Filtros */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={filter === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("all")}
+            className="gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            Tudo
+          </Button>
+          <Button
+            variant={filter === "debit" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("debit")}
+            className="gap-2"
+          >
+            <Banknote className="h-4 w-4" />
+            Débito
+          </Button>
+          <Button
+            variant={filter === "credit" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("credit")}
+            className="gap-2"
+          >
+            <CreditCard className="h-4 w-4" />
+            Crédito
+          </Button>
+          <Button
+            variant={filter === "deposit" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("deposit")}
+            className="gap-2"
+          >
+            <TrendingUp className="h-4 w-4" />
+            Depósito
+          </Button>
+        </div>
+
+        {/*botão para ir aos Cartões (Só aparece se estiver na Home) */}
+        {isHomeView && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate("/cards")}
+            className="text-muted-foreground hover:text-primary gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Gerenciar Cartões
+          </Button>
+        )}
+      </div>
+
+      {/*lista Filtrada */}
+      {filteredExpenses.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8 border border-dashed rounded-lg">
+          {filter === "all" 
+            ? "Nenhuma transação registrada neste mês." 
+            : `Nenhum registro de ${getPaymentTypeLabel(filter).toLowerCase()} encontrado.`}
         </div>
       ) : (
-        expenses.map((expense, index) => {
+        filteredExpenses.map((expense, index) => {
           const isInstallment = expense.installment_id != null;
           const totalAmount = parseFloat(expense.total_amount || "0");
           const installmentAmount = parseFloat(expense.installment_amount || "0");
@@ -77,10 +141,10 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
               key={uniqueKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-lg bg-card border relative"
+              transition={{ delay: index * 0.05 }}
+              className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-lg bg-card border relative hover:shadow-sm transition-shadow"
             >
-              {/* Informações da Esquerda */}
+              {/*informações da Esquerda */}
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium">{expense.description}</h3>
@@ -93,27 +157,26 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
                     locale: ptBR,
                   })}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
                   {paymentMethodName}
                   {isInstallment && Number(expense.total_installments) > 1 && (
-                    <span className="ml-2">
-                      (Parcela {expense.installment_number} de{" "}
-                      {expense.total_installments} -{" "}
-                      {getPaymentTypeLabel(expense.payment_type)})
+                    <span className="ml-1">
+                      (Parcela {expense.installment_number}/{expense.total_installments})
                     </span>
                   )}
                   {expense.paidWith && (
-                    <span className="ml-2 text-green-600">
-                      Pago com: {expense.paidWith}
+                    <span className="ml-2 text-green-600 text-xs font-semibold bg-green-50 px-1 rounded">
+                      Pago: {expense.paidWith}
                     </span>
                   )}
                 </p>
               </div>
 
-              {/* Informações da Direita (Valor e Badge) */}
+              {/*informações da Direita (Valor e Badge) */}
               <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
                 <div className="text-right">
-                  <span className="font-semibold">
+                  <span className={`font-semibold ${expense.payment_type === 'deposit' ? 'text-emerald-600' : ''}`}>
+                    {expense.payment_type === 'deposit' ? '+ ' : ''} 
                     R$ {displayAmount.toFixed(2)}
                   </span>
                   {isInstallment && Number(expense.total_installments) > 1 && (
@@ -125,42 +188,45 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
 
                 {renderPaymentBadge(expense.payment_type)}
 
-                {/* MENU DE AÇÕES */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Abrir menu</span>
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    
-                    {/* Botão Editar */}
-                    <DropdownMenuItem 
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        onEdit(expense);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Pencil className="mr-2 h-4 w-4" />
-                      <span>Editar</span>
-                    </DropdownMenuItem>
+                {/* MENU DE AÇÕES (Só se onEdit/onDelete existirem) */}
+                {isHomeView && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      
+                      {onEdit && (
+                        <DropdownMenuItem 
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            onEdit(expense);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Editar</span>
+                        </DropdownMenuItem>
+                      )}
 
-                    {/* Botão Excluir */}
-                    <DropdownMenuItem 
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        onDelete(expense);
-                      }}
-                      className="text-red-600 focus:text-red-600 cursor-pointer"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Excluir</span>
-                    </DropdownMenuItem>
+                      {onDelete && (
+                        <DropdownMenuItem 
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            onDelete(expense);
+                          }}
+                          className="text-red-600 focus:text-red-600 cursor-pointer"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Excluir</span>
+                        </DropdownMenuItem>
+                      )}
 
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </motion.div>
           );
