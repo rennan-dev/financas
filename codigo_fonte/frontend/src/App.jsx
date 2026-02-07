@@ -8,7 +8,8 @@ import ResetPassword from "@/pages/ResetPassword";
 import Home from "@/pages/Home";
 import Profile from "@/pages/Profile";
 import Cards from "@/pages/Cards";
-import { RequireAuth } from "@/components/RequireAuth"; 
+import { RequireAuth } from "@/components/RequireAuth";
+import CardDetails from './pages/CardDetails';
 
 function App() {
   return (
@@ -42,6 +43,15 @@ function App() {
           element={
             <RequireAuth>
               <Cards />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/cards/:id"
+          element={
+            <RequireAuth>
+              <CardDetails />
             </RequireAuth>
           }
         />

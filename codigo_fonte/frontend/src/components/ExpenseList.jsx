@@ -1,8 +1,19 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { Repeat, MoreVertical, Pencil, Trash2, Filter, Wallet, CreditCard, Banknote, TrendingUp } from "lucide-react";
+import { 
+  Repeat, 
+  MoreVertical, 
+  Pencil, 
+  Trash2, 
+  Filter, 
+  CreditCard, 
+  Banknote, 
+  TrendingUp,
+  Settings 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 function ExpenseList({ expenses, onEdit, onDelete }) {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
 
   const getPaymentTypeLabel = (type) => {
@@ -21,7 +33,6 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
     return "Dinheiro";
   };
 
-  //lógica de filtragem
   const filteredExpenses = expenses.filter((expense) => {
     if (filter === "all") return true;
     return expense.payment_type === filter;
@@ -42,49 +53,69 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
     }
   };
 
+  //verifica se é modo de edição (Home)
+  const isHomeView = !!onEdit; 
+
   return (
     <div className="space-y-4">
-      {/* Barra de Filtros */}
-      <div className="flex flex-wrap gap-2 pb-2">
-        <Button
-          variant={filter === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("all")}
-          className="gap-2"
-        >
-          <Filter className="h-4 w-4" />
-          Tudo
-        </Button>
-        <Button
-          variant={filter === "debit" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("debit")}
-          className="gap-2"
-        >
-          <Banknote className="h-4 w-4" />
-          Débito
-        </Button>
-        <Button
-          variant={filter === "credit" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("credit")}
-          className="gap-2"
-        >
-          <CreditCard className="h-4 w-4" />
-          Crédito
-        </Button>
-        <Button
-          variant={filter === "deposit" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("deposit")}
-          className="gap-2"
-        >
-          <TrendingUp className="h-4 w-4" />
-          Depósito
-        </Button>
+      {/*barra de Topo: Filtros + Botão de Cartões */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        
+        {/*grupo de Filtros */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={filter === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("all")}
+            className="gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            Tudo
+          </Button>
+          <Button
+            variant={filter === "debit" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("debit")}
+            className="gap-2"
+          >
+            <Banknote className="h-4 w-4" />
+            Débito
+          </Button>
+          <Button
+            variant={filter === "credit" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("credit")}
+            className="gap-2"
+          >
+            <CreditCard className="h-4 w-4" />
+            Crédito
+          </Button>
+          <Button
+            variant={filter === "deposit" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("deposit")}
+            className="gap-2"
+          >
+            <TrendingUp className="h-4 w-4" />
+            Depósito
+          </Button>
+        </div>
+
+        {/*botão para ir aos Cartões (Só aparece se estiver na Home) */}
+        {isHomeView && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate("/cards")}
+            className="text-muted-foreground hover:text-primary gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Gerenciar Cartões
+          </Button>
+        )}
       </div>
 
-      {/* Lista Filtrada */}
+      {/*lista Filtrada */}
       {filteredExpenses.length === 0 ? (
         <div className="text-center text-muted-foreground py-8 border border-dashed rounded-lg">
           {filter === "all" 
@@ -113,7 +144,7 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
               transition={{ delay: index * 0.05 }}
               className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-lg bg-card border relative hover:shadow-sm transition-shadow"
             >
-              {/* Informações da Esquerda */}
+              {/*informações da Esquerda */}
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium">{expense.description}</h3>
@@ -141,7 +172,7 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
                 </p>
               </div>
 
-              {/* Informações da Direita (Valor e Badge) */}
+              {/*informações da Direita (Valor e Badge) */}
               <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
                 <div className="text-right">
                   <span className={`font-semibold ${expense.payment_type === 'deposit' ? 'text-emerald-600' : ''}`}>
@@ -157,39 +188,45 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
 
                 {renderPaymentBadge(expense.payment_type)}
 
-                {/* MENU DE AÇÕES */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    
-                    <DropdownMenuItem 
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        onEdit(expense);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Pencil className="mr-2 h-4 w-4" />
-                      <span>Editar</span>
-                    </DropdownMenuItem>
+                {/* MENU DE AÇÕES (Só se onEdit/onDelete existirem) */}
+                {isHomeView && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      
+                      {onEdit && (
+                        <DropdownMenuItem 
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            onEdit(expense);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Editar</span>
+                        </DropdownMenuItem>
+                      )}
 
-                    <DropdownMenuItem 
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        onDelete(expense);
-                      }}
-                      className="text-red-600 focus:text-red-600 cursor-pointer"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Excluir</span>
-                    </DropdownMenuItem>
+                      {onDelete && (
+                        <DropdownMenuItem 
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            onDelete(expense);
+                          }}
+                          className="text-red-600 focus:text-red-600 cursor-pointer"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Excluir</span>
+                        </DropdownMenuItem>
+                      )}
 
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </motion.div>
           );

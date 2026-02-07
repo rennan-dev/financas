@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import UpdateBalanceDialog from "@/components/UpdateBalanceDialog";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,11 +31,9 @@ function Cards() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Estados para Deletar
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
 
-  // Estados para Editar Saldo
   const [showUpdateBalance, setShowUpdateBalance] = useState(false);
   const [cardToEdit, setCardToEdit] = useState(null);
 
@@ -194,10 +192,22 @@ function Cards() {
     <Layout>
       <div className="min-h-screen flex flex-col items-center justify-start px-4 py-10 bg-gradient-to-br from-primary/20 to-muted">
         <div className="w-full max-w-5xl space-y-8">
+          
+          <div className="flex items-center">
+            <Button 
+                variant="ghost" 
+                onClick={() => navigate("/home")}
+                className="gap-2 pl-0 hover:bg-transparent hover:text-primary transition-colors"
+            >
+                <ArrowLeft className="h-5 w-5" />
+                <span className="text-lg font-medium">Voltar para Home</span>
+            </Button>
+          </div>
+
           <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Seus Cartões 💳</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Veja seus métodos de pagamento cadastrados
+              Clique em um cartão para ver o extrato detalhado
             </p>
           </div>
 
@@ -208,16 +218,20 @@ function Cards() {
               {cards.map((card) => (
                 <div
                   key={card.id}
-                  className="bg-card/90 backdrop-blur-md border border-border p-6 rounded-xl shadow-md space-y-3 flex flex-col justify-between"
+                  onClick={() => navigate(`/cards/${card.id}`)}
+                  className="bg-card/90 backdrop-blur-md border border-border p-6 rounded-xl shadow-md space-y-3 flex flex-col justify-between cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
                 >
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <p>
                       <span className="font-semibold text-foreground">Nome:</span> {card.name}
                     </p>
                     <p>
-                      <span className="font-semibold text-foreground">Saldo: </span> 
-                      <span className="text-muted-foreground text-sm mt-1">
-                         R$ {card.balance.toFixed(2)}
+                      <span className="font-semibold text-foreground">Tipo:</span> {card.type}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-foreground">Saldo:</span> 
+                      <span className={`ml-1 ${card.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        R$ {card.balance.toFixed(2)}
                       </span>
                     </p>
                     <p>
@@ -227,21 +241,25 @@ function Cards() {
                   </div>
 
                   <div className="flex gap-2 mt-4">
-                    {/* Botão de Editar Saldo */}
                     <Button
                         variant="outline"
-                        onClick={() => handleOpenEdit(card)}
-                        className="h-8 flex-1 gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation(); 
+                          handleOpenEdit(card);
+                        }}
+                        className="flex-1 gap-2"
                     >
                         <Pencil className="h-4 w-4" />
                         Editar
                     </Button>
 
-                    {/* Botão de Deletar */}
                     <Button
                         variant="destructive"
-                        onClick={() => promptDelete(card)}
-                        className="h-8 flex-1 gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          promptDelete(card);
+                        }}
+                        className="flex-1 gap-2"
                     >
                         <Trash2 className="h-4 w-4" />
                         Excluir
