@@ -78,6 +78,24 @@ if ($payment_type === 'invoice_payment') {
         $stmtCredit->close();
     }
 }
+elseif ($payment_type === 'transfer') {
+    // 1. Subtrai da conta de origem
+    $sqlBalanceOut = "UPDATE payment_methods SET balance = balance - ? WHERE id = ?";
+    $stmtOut = $conn->prepare($sqlBalanceOut);
+    $stmtOut->bind_param("di", $amount, $payment_method_id);
+    $stmtOut->execute();
+    $stmtOut->close();
+
+    // 2. Adiciona na conta de destino
+    $dest_id = isset($data['destination_account_id']) ? intval($data['destination_account_id']) : null;
+    if ($dest_id) {
+        $sqlBalanceIn = "UPDATE payment_methods SET balance = balance + ? WHERE id = ?";
+        $stmtIn = $conn->prepare($sqlBalanceIn);
+        $stmtIn->bind_param("di", $amount, $dest_id);
+        $stmtIn->execute();
+        $stmtIn->close();
+    }
+}
 elseif ($payment_type !== 'credit' && $payment_type !== 'deposit') {
     $sqlBalance = "UPDATE payment_methods SET balance = balance - ? WHERE id = ?";
     $stmt2 = $conn->prepare($sqlBalance);
