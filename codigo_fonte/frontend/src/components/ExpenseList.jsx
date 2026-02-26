@@ -30,6 +30,7 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
     if (type === "credit") return "Crédito";
     if (type === "debit") return "Débito";
     if (type === "deposit") return "Depósito";
+    if (type === "invoice_payment") return "Pagamento Fatura";
     return "Dinheiro";
   };
 
@@ -48,20 +49,18 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
         return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>Débito</span>;
       case "deposit":
         return <span className={`${baseClasses} bg-purple-100 text-purple-800`}>Depósito</span>;
+      case "invoice_payment":
+        return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Fatura</span>;
       default:
         return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Dinheiro</span>;
     }
   };
 
-  //verifica se é modo de edição (Home)
   const isHomeView = !!onEdit; 
 
   return (
     <div className="space-y-4">
-      {/*barra de Topo: Filtros + Botão de Cartões */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        
-        {/*grupo de Filtros */}
         <div className="flex flex-wrap gap-2">
           <Button
             variant={filter === "all" ? "default" : "outline"}
@@ -101,7 +100,6 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
           </Button>
         </div>
 
-        {/*botão para ir aos Cartões (Só aparece se estiver na Home) */}
         {isHomeView && (
           <Button 
             variant="ghost" 
@@ -115,7 +113,6 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
         )}
       </div>
 
-      {/*lista Filtrada */}
       {filteredExpenses.length === 0 ? (
         <div className="text-center text-muted-foreground py-8 border border-dashed rounded-lg">
           {filter === "all" 
@@ -175,11 +172,11 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
               {/*informações da Direita (Valor e Badge) */}
               <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
                 <div className="text-right">
-                  <span className={`font-semibold ${expense.payment_type === 'deposit' ? 'text-emerald-600' : ''}`}>
-                    {expense.payment_type === 'deposit' ? '+ ' : ''} 
+                  <span className="font-semibold text-foreground">
                     R$ {displayAmount.toFixed(2)}
                   </span>
-                  {isInstallment && Number(expense.total_installments) > 1 && (
+                  
+                  {isInstallment && Number(expense.total_installments) > 1 && fullAmount && (
                     <p className="text-xs text-muted-foreground">
                       Total: R$ {fullAmount.toFixed(2)}
                     </p>
@@ -188,42 +185,33 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
 
                 {renderPaymentBadge(expense.payment_type)}
 
-                {/* MENU DE AÇÕES (Só se onEdit/onDelete existirem) */}
+                {/* Menu de Ações (MoreVertical) */}
                 {isHomeView && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      
                       {onEdit && (
                         <DropdownMenuItem 
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            onEdit(expense);
-                          }}
+                          onSelect={(e) => { e.preventDefault(); onEdit(expense); }}
                           className="cursor-pointer"
                         >
                           <Pencil className="mr-2 h-4 w-4" />
                           <span>Editar</span>
                         </DropdownMenuItem>
                       )}
-
                       {onDelete && (
                         <DropdownMenuItem 
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            onDelete(expense);
-                          }}
+                          onSelect={(e) => { e.preventDefault(); onDelete(expense); }}
                           className="text-red-600 focus:text-red-600 cursor-pointer"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           <span>Excluir</span>
                         </DropdownMenuItem>
                       )}
-
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}

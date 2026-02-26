@@ -9,7 +9,6 @@ date_default_timezone_set('America/Manaus');
 
 include 'config.php';
 
-// Lê o JSON vindo do front-end
 $data = json_decode(file_get_contents('php://input'), true);
 
 $user_id = $data['user_id'];
@@ -21,16 +20,22 @@ $payment_type = $data['payment_type'];
 $is_recurring = isset($data['is_recurring']) ? (int)$data['is_recurring'] : 0;
 $installments = isset($data['installments']) ? intval($data['installments']) : 1;
 
-$paid = 0;
+$invoice_card_id = isset($data['invoice_card_id']) ? intval($data['invoice_card_id']) : null;
+$invoice_month = isset($data['invoice_month']) ? intval($data['invoice_month']) : null;
+$invoice_year = isset($data['invoice_year']) ? intval($data['invoice_year']) : null;
 
-// Insere na tabela expenses
+$paid = ($payment_type === 'credit') ? 0 : 1;
+
 $stmt = $conn->prepare("
   INSERT INTO expenses 
-    (user_id, payment_method_id, description, amount, date, payment_type, is_recurring, paid)
+    (user_id, payment_method_id, description, amount, date, payment_type, is_recurring, paid, paid_with_method_id)
   VALUES 
-    (?, ?, ?, ?, ?, ?, ?, ?)
+    (?, ?, ?, ?, ?, ?, ?, ?, ?)
 ");
-$stmt->bind_param("iisdssii", 
+
+$paid_with = ($payment_type !== 'credit') ? $payment_method_id : null;
+
+$stmt->bind_param("iisdssiis", 
   $user_id, 
   $payment_method_id, 
   $description, 
@@ -38,34 +43,56 @@ $stmt->bind_param("iisdssii",
   $date, 
   $payment_type, 
   $is_recurring,
-  $paid
+  $paid,
+  $paid_with
 );
-$stmt->execute();
 
-$expense_id = $stmt->insert_id;
-$stmt->close();
+if($stmt->execute()){
+    $expense_id = $stmt->insert_id;
+    $stmt->close();
+} else {
+    echo json_encode(["status" => "error", "message" => "Erro ao inserir despesa"]);
+    exit;
+}
 
-// Se o pagamento não for de crédito, marque como pago e atualize o saldo
-if ($payment_type !== 'credit') {
-    // Define se vai somar ou subtrair
-    // Se for deposit, o operador é +, caso contrário (debit/money) é -
-    $operator = ($payment_type === 'deposit') ? "+" : "-";
-    
-    // Atualiza o saldo do método de pagamento
-    $sqlBalance = "UPDATE payment_methods SET balance = balance $operator ? WHERE id = ?";
+if ($payment_type === 'invoice_payment') {
+    $sqlBalance = "UPDATE payment_methods SET balance = balance - ? WHERE id = ?";
+    $stmtBal = $conn->prepare($sqlBalance);
+    $stmtBal->bind_param("di", $amount, $payment_method_id);
+    $stmtBal->execute();
+    $stmtBal->close();
+
+    if ($invoice_card_id && $invoice_month && $invoice_year) {
+        $sqlUpdateCredit = "UPDATE expenses 
+                            SET paid = 1, paid_with_method_id = ? 
+                            WHERE user_id = ? 
+                            AND payment_method_id = ? 
+                            AND payment_type = 'credit' 
+                            AND MONTH(date) = ? 
+                            AND YEAR(date) = ?
+                            AND paid = 0";
+        
+        $stmtCredit = $conn->prepare($sqlUpdateCredit);
+        $stmtCredit->bind_param("iiiii", $payment_method_id, $user_id, $invoice_card_id, $invoice_month, $invoice_year);
+        $stmtCredit->execute();
+        $stmtCredit->close();
+    }
+}
+elseif ($payment_type !== 'credit' && $payment_type !== 'deposit') {
+    $sqlBalance = "UPDATE payment_methods SET balance = balance - ? WHERE id = ?";
     $stmt2 = $conn->prepare($sqlBalance);
     $stmt2->bind_param("di", $amount, $payment_method_id);
     $stmt2->execute();
     $stmt2->close();
-
-    // Marca como paga (depósitos são considerados "efetivados" na hora)
-    $stmt3 = $conn->prepare("UPDATE expenses SET paid = 1, paid_with_method_id = ? WHERE id = ?");
-    $stmt3->bind_param("ii", $payment_method_id, $expense_id);
+}
+elseif ($payment_type === 'deposit') {
+    $sqlBalance = "UPDATE payment_methods SET balance = balance + ? WHERE id = ?";
+    $stmt3 = $conn->prepare($sqlBalance);
+    $stmt3->bind_param("di", $amount, $payment_method_id);
     $stmt3->execute();
     $stmt3->close();
 }
 
-// Se for compra parcelada (crédito com mais de 1 parcela), insere as parcelas
 if ($payment_type === 'credit' && $installments > 1) {
   $installment_amount = $amount / $installments;
   
@@ -105,6 +132,6 @@ $expense_return = [
   "paid_with_method_id" => ($payment_type !== 'credit') ? $payment_method_id : null
 ];
 
-echo json_encode(["status" => "success", "expense" => $expense_return]);
+echo json_encode(["status" => "success", "id" => $expense_id]);
 $conn->close();
 ?>
