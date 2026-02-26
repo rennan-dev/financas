@@ -109,7 +109,7 @@ ALTER TABLE `users`
 --
 -- Restrições para tabelas despejadas
 --
-
+ALTER TABLE `expenses` MODIFY `payment_type` enum('money','debit','credit','deposit', 'invoice_payment', 'boleto', 'transfer') NOT NULL;
 --
 -- Restrições para tabelas `expenses`
 --
@@ -122,4 +122,5 @@ ALTER TABLE `expenses`
 --
 ALTER TABLE `payment_methods`
   ADD CONSTRAINT `payment_methods_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
 COMMIT;

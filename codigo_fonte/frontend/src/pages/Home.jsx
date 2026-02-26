@@ -6,7 +6,8 @@ import Dashboard from "@/components/Dashboard";
 import AddExpenseDialog from "@/components/AddExpenseDialog";
 import AddPaymentMethodDialog from "@/components/AddPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, CreditCard, Wallet, Banknote, TrendingUp, FileText } from "lucide-react";
+import { Plus, CreditCard, Wallet, Banknote, TrendingUp, FileText, Barcode, ArrowRightLeft } from "lucide-react";
+import AddTransferDialog from "@/components/AddTransferDialog";
 import EditExpenseDialog from "@/components/EditExpenseDialog";
 import PayInvoiceDialog from "@/components/PayInvoiceDialog";
 import {
@@ -28,6 +29,8 @@ function Home() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState(null);
   const [showPayInvoice, setShowPayInvoice] = useState(false);
+  const [showAddBoleto, setShowAddBoleto] = useState(false);
+  const [showAddTransfer, setShowAddTransfer] = useState(false);
 
   useEffect(() => {
     fetchExpenses();
@@ -170,7 +173,6 @@ function Home() {
   };
 
   const handlePayInvoice = async (payload) => {
-    // Reutilizamos a lógica do endpoint addExpense, pois ele já trata o tipo 'invoice_payment'
     const user = JSON.parse(sessionStorage.getItem("user"));
     if (!user) return;
 
@@ -275,6 +277,89 @@ function Home() {
         );
         fetchPaymentMethods();
       }
+  };
+
+  const handleAddBoleto = async (expense) => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) return;
+
+    const body = {
+      user_id: user.id,
+      payment_method_id: expense.paymentMethod,
+      description: expense.description,
+      amount: expense.amount,
+      date: expense.date,
+      installments: 1,
+      payment_type: 'boleto',
+    };
+
+    try {
+      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        fetchExpenses();
+        fetchPaymentMethods();
+        toast({
+          title: "Boleto pago!",
+          description: "O pagamento do boleto foi registrado e o saldo deduzido.",
+        });
+      } else {
+        toast({
+          title: "Erro ao registrar boleto",
+          description: data.message || "Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar boleto:", error);
+    }
+  };
+
+  const handleAddTransfer = async (transferData) => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) return;
+
+    const destMethod = paymentMethods.find((m) => m.id.toString() === transferData.destinationMethodId);
+
+    const payload = {
+      user_id: user.id,
+      payment_method_id: transferData.sourceMethodId,
+      destination_account_id: transferData.destinationMethodId,
+      description: transferData.description || `Transferência para ${destMethod?.name}`,
+      amount: transferData.amount,
+      date: transferData.date,
+      payment_type: 'transfer', 
+      installments: 1
+    };
+
+    try {
+      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        fetchExpenses();
+        fetchPaymentMethods();
+        toast({ title: "Transferência concluída!", description: "Saldos atualizados." });
+      } else {
+        toast({ title: "Erro", description: result.message, variant: "destructive" });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Erro de Conexão", description: "Não foi possível transferir.", variant: "destructive" });
+    }
   };
 
   const getTotalBalance = () => {
@@ -453,9 +538,17 @@ function Home() {
                   <CreditCard className="h-4 w-4 text-blue-500" /> 
                   <span>Novo Crédito</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowAddTransfer(true)} className="cursor-pointer gap-2 p-3">
+                  <ArrowRightLeft className="h-4 w-4 text-orange-500" /> 
+                  <span>Transferência</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowPayInvoice(true)} className="cursor-pointer gap-2 p-3">
                   <FileText className="h-4 w-4 text-purple-500" /> 
                   <span>Pagamento de Fatura</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowAddBoleto(true)} className="cursor-pointer gap-2 p-3">
+                  <Barcode className="h-4 w-4 text-red-500" /> 
+                  <span>Pagar Boleto</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowAddPaymentMethod(true)} className="cursor-pointer gap-2 p-3 border-t">
                   <Wallet className="h-4 w-4 text-orange-500" /> 
@@ -509,6 +602,21 @@ function Home() {
           onOpenChange={setShowPayInvoice}
           paymentMethods={paymentMethods}
           onConfirmPayment={handlePayInvoice}
+        />
+
+        <AddTransferDialog
+          open={showAddTransfer}
+          onOpenChange={setShowAddTransfer}
+          onAddTransfer={handleAddTransfer}
+          paymentMethods={paymentMethods}
+        />
+
+        <AddExpenseDialog
+          open={showAddBoleto}
+          onOpenChange={setShowAddBoleto}
+          onAddExpense={handleAddBoleto}
+          paymentMethods={paymentMethods}
+          title="Pagar Boleto"
         />
 
         <AddPaymentMethodDialog

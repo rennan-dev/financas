@@ -12,7 +12,9 @@ import {
   CreditCard, 
   Banknote, 
   TrendingUp,
-  Settings 
+  Settings,
+  Barcode,
+  ArrowRightLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +32,9 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
     if (type === "credit") return "Crédito";
     if (type === "debit") return "Débito";
     if (type === "deposit") return "Depósito";
+    if (type === "transfer") return "Transferência";
     if (type === "invoice_payment") return "Pagamento Fatura";
+    if (type === "boleto") return "Boleto";
     return "Dinheiro";
   };
 
@@ -51,6 +55,10 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
         return <span className={`${baseClasses} bg-purple-100 text-purple-800`}>Depósito</span>;
       case "invoice_payment":
         return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Fatura</span>;
+      case "boleto":
+        return <span className={`${baseClasses} bg-red-100 text-red-800`}>Boleto</span>;
+      case "transfer":
+        return <span className={`${baseClasses} bg-orange-100 text-orange-800`}>Transferência</span>;
       default:
         return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Dinheiro</span>;
     }
@@ -97,6 +105,24 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
           >
             <TrendingUp className="h-4 w-4" />
             Depósito
+          </Button>
+          <Button
+            variant={filter === "transfer" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("transfer")}
+            className="gap-2"
+          >
+            <ArrowRightLeft className="h-4 w-4" />
+            Transferência
+          </Button>
+          <Button
+            variant={filter === "boleto" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("boleto")}
+            className="gap-2"
+          >
+            <Barcode className="h-4 w-4" />
+            Boleto
           </Button>
         </div>
 
