@@ -11,17 +11,14 @@ import {
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Area,
-  AreaChart
+  CartesianGrid
 } from "recharts";
-import { Button } from "@/components/ui/button";
-import { Wallet, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Wallet } from "lucide-react";
 import ExpenseList from "@/components/ExpenseList";
 import MonthSelector from "@/components/MonthSelector";
 import UpdateBalanceDialog from "@/components/UpdateBalanceDialog";
 
-// Tooltip personalizado do Gráfico de Pizza
+//tooltip do Gráfico de Pizza
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
@@ -36,7 +33,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-// Tooltip personalizado do Gráfico de Evolução (Multi-linhas)
+//tooltip do Gráfico de Linha
 const CustomLineTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -66,7 +63,7 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
   const [showUpdateBalance, setShowUpdateBalance] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
 
-  // --- LÓGICA 1: DESPESAS DO MÊS ATUAL (SELECIONADO) ---
+  // --- 1. FILTRO DO MÊS SELECIONADO ---
   const filteredExpenses = useMemo(() => {
     return expenses.filter(expense => {
       const expenseDate = expense.installment_id ? expense.due_date : expense.expense_date; 
@@ -80,16 +77,38 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
 
   const totalExpenses = useMemo(() => {
     return filteredExpenses.reduce((acc, expense) => {
-
-      if(expense.payment_type === 'deposit') return acc; //ignora depósitos
+      if (expense.payment_type !== 'credit' && expense.payment_type !== 'debit') {
+        return acc;
+      }
+      
       const valueStr = expense.installment_id ? expense.installment_amount : expense.total_amount;
-      const normalizedValueStr = typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr;
-      const amount = parseFloat(normalizedValueStr);
+      const amount = parseFloat(typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr);
+      
       return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
   }, [filteredExpenses]);
 
-  // --- LÓGICA 2: DADOS PARA GRÁFICO DE EVOLUÇÃO ---
+  // --- 2. DADOS PARA O GRÁFICO DE PIZZA ---
+  const chartData = useMemo(() => {
+    const sums = { "Crédito": 0, "Débito": 0, "Depósito": 0 };
+
+    filteredExpenses.forEach(expense => {
+      const valueStr = expense.installment_id ? expense.installment_amount : expense.total_amount;
+      const amount = parseFloat(typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr) || 0;
+
+      if (expense.payment_type === 'credit') {
+        sums["Crédito"] += amount;
+      } else if (expense.payment_type === 'deposit') {
+        sums["Depósito"] += amount;
+      } else if (expense.payment_type === 'debit') {
+        sums["Débito"] += amount;
+      }
+    });
+
+    return Object.entries(sums).map(([name, value]) => ({ name, value }));
+  }, [filteredExpenses]);
+
+  // --- 3. DADOS PARA EVOLUÇÃO ---
   const evolutionData = useMemo(() => {
     const data = [];
     for (let i = 5; i >= 0; i--) {
@@ -98,7 +117,6 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
       
       const monthName = d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
       
-      // Variáveis para somar cada tipo separadamente
       let credit = 0;
       let debit = 0;
       let deposit = 0;
@@ -107,21 +125,17 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
         const expenseDate = expense.installment_id ? expense.due_date : expense.expense_date; 
         const dateObj = expenseDate instanceof Date ? expenseDate : new Date(expenseDate);
         
-        // Verifica se a despesa pertence ao mês do loop
         if (dateObj.getMonth() === d.getMonth() && dateObj.getFullYear() === d.getFullYear()) {
           const valueStr = expense.installment_id ? expense.installment_amount : expense.total_amount;
-          const normalizedValueStr = typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr;
-          const amount = parseFloat(normalizedValueStr);
-          const finalAmount = isNaN(amount) ? 0 : amount;
+          const amount = parseFloat(typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr) || 0;
 
-          // Separação por tipo
           if (expense.payment_type === 'credit') {
-            credit += finalAmount;
+            credit += amount;
           } else if (expense.payment_type === 'deposit') {
-            deposit += finalAmount;
-          } else {
-            // Agrupa 'debit' e 'money' na linha de Débito
-            debit += finalAmount;
+            deposit += amount;
+          } else if (expense.payment_type === 'debit') {
+             // Apenas débito real
+            debit += amount;
           }
         }
       });
@@ -136,44 +150,23 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
     return data;
   }, [expenses, selectedMonth]);
 
-  // --- PREPARAÇÃO DO GRÁFICO DE PIZZA ---
-  const expensesByType = filteredExpenses.reduce((acc, expense) => {
-      const expenseValue = expense.installment_id 
-        ? parseFloat(expense.installment_amount)
-        : parseFloat(expense.total_amount);
-      
-      const type = expense.payment_type === 'credit' ? 'Crédito' : 
-                  expense.payment_type === 'debit'  ? 'Débito'  : 
-                  expense.payment_type === 'deposit' ? 'Depósito' : 'Dinheiro';
-      
-      if(!acc[type]) acc[type] = 0;
-      acc[type] += isNaN(expenseValue) ? 0 : expenseValue;
-      return acc;
-  }, {});
-
-  const chartData = Object.entries(expensesByType).map(([name, value]) => ({
-    name,
-    value
-  }));
-
   const colorMapping = {
-      "Crédito": "#00C49F",
-      "Débito": "#0088FE",
-      "Dinheiro": "#FFA500",
-      "Depósito": "#8b5cf6"
+      "Crédito": "#00C49F",  // Verde Água
+      "Débito": "#0088FE",   // Azul
+      "Depósito": "#8b5cf6"  // Roxo
   };
 
   return (
     <div className="w-full space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* CARD DE SALDOS E CONTAS */}
+        {/* CARD ESQUERDA: SALDOS E LISTA DE CONTAS */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="lg:col-span-1 space-y-4"
         >
-          {/* Container Saldo Total */}
+          {/* Saldo Total */}
           <div className="p-6 rounded-2xl bg-card border border-border shadow-md">
             <div className="flex justify-between items-start mb-2">
               <div>
@@ -184,19 +177,20 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
               </div>
             </div>
 
-            {/* COMPARATIVO MÊS ANTERIOR */}
             <div className="flex flex-col gap-2 mt-4">
               <div className="flex items-center justify-between text-sm bg-secondary/50 p-2 rounded-lg">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Wallet className="w-4 h-4" />
-                  <span>Gasto no mês:</span>
+                  <span>Gasto no mês (Crédito + Débito):</span>
                 </div>
-                <span className="font-bold text-foreground">R$ {totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                <span className="font-bold text-foreground">
+                  R$ {totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* LISTA DE CONTAS */}
+          {/* Lista de Contas */}
           <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
             <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">
               Minhas Contas
@@ -204,7 +198,7 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
             
             <div className="space-y-3 max-h-none lg:max-h-[210px] lg:overflow-y-auto lg:pr-2">
               {paymentMethods
-                .filter(m => m.type !== 'credit')
+                .filter(m => m.type !== 'credit') 
                 .map((method) => (
                 <div 
                   key={method.id}
@@ -227,7 +221,7 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
           </div>
         </motion.div>
 
-        {/* GRÁFICO DE PIZZA (Responsivo) */}
+        {/* GRÁFICO DE PIZZA */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -247,7 +241,7 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
                   fill="#8884d8"
                   dataKey="value"
                   stroke="none"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
                   style={{ fontSize: '12px' }}
                 >
                   {chartData.map((entry, index) => (
@@ -262,7 +256,7 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
         </motion.div>
       </div>
 
-      {/* GRÁFICO DE EVOLUÇÃO (LINHA) */}
+      {/* GRÁFICO DE EVOLUÇÃO */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -290,33 +284,30 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
               <Tooltip content={<CustomLineTooltip />} />
               <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}/>
               
-              {/* Linha de Depósito */}
               <Line 
                 type="monotone" 
                 dataKey="Depósito" 
-                stroke="#8b5cf6" 
+                stroke={colorMapping["Depósito"]} 
                 strokeWidth={3}
-                dot={{ r: 4, strokeWidth: 0, fill: "#8b5cf6" }}
+                dot={{ r: 4, strokeWidth: 0, fill: colorMapping["Depósito"] }}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />
 
-              {/* Linha de Crédito */}
               <Line 
                 type="monotone" 
                 dataKey="Crédito" 
-                stroke="#00C49F" 
+                stroke={colorMapping["Crédito"]} 
                 strokeWidth={3}
-                dot={{ r: 4, strokeWidth: 0, fill: "#00C49F" }}
+                dot={{ r: 4, strokeWidth: 0, fill: colorMapping["Crédito"] }}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />
 
-              {/* Linha de Débito */}
               <Line 
                 type="monotone" 
                 dataKey="Débito" 
-                stroke="#0088FE" 
+                stroke={colorMapping["Débito"]} 
                 strokeWidth={3}
-                dot={{ r: 4, strokeWidth: 0, fill: "#0088FE" }}
+                dot={{ r: 4, strokeWidth: 0, fill: colorMapping["Débito"] }}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />
             </LineChart>

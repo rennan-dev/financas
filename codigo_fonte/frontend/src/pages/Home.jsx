@@ -6,8 +6,9 @@ import Dashboard from "@/components/Dashboard";
 import AddExpenseDialog from "@/components/AddExpenseDialog";
 import AddPaymentMethodDialog from "@/components/AddPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, CreditCard, Wallet, Banknote, TrendingUp } from "lucide-react";
+import { Plus, CreditCard, Wallet, Banknote, TrendingUp, FileText } from "lucide-react";
 import EditExpenseDialog from "@/components/EditExpenseDialog";
+import PayInvoiceDialog from "@/components/PayInvoiceDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,7 @@ function Home() {
   const [showAddDeposit, setShowAddDeposit] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState(null);
+  const [showPayInvoice, setShowPayInvoice] = useState(false);
 
   useEffect(() => {
     fetchExpenses();
@@ -166,6 +168,34 @@ function Home() {
       });
     }
   };
+
+  const handlePayInvoice = async (payload) => {
+    // Reutilizamos a lógica do endpoint addExpense, pois ele já trata o tipo 'invoice_payment'
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) return;
+
+    const fullPayload = { ...payload, user_id: user.id };
+
+    try {
+      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(fullPayload),
+      });
+      const data = await response.json();
+
+      if (data.status === "success") {
+        fetchExpenses();
+        fetchPaymentMethods();
+        toast({ title: "Fatura Paga!", description: "O valor foi debitado e as faturas baixadas." });
+      } else {
+        toast({ title: "Erro", description: data.message, variant: "destructive" });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+};
 
   const handleAddRecurringExpense = async (expense) => {
     const user = JSON.parse(sessionStorage.getItem("user"));
@@ -423,6 +453,10 @@ function Home() {
                   <CreditCard className="h-4 w-4 text-blue-500" /> 
                   <span>Novo Crédito</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowPayInvoice(true)} className="cursor-pointer gap-2 p-3">
+                  <FileText className="h-4 w-4 text-purple-500" /> 
+                  <span>Pagamento de Fatura</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowAddPaymentMethod(true)} className="cursor-pointer gap-2 p-3 border-t">
                   <Wallet className="h-4 w-4 text-orange-500" /> 
                   <span>Novo Cartão/Conta</span>
@@ -468,6 +502,13 @@ function Home() {
           paymentMethods={paymentMethods}
           title="Adicionar Compra no Crédito"
           isCredit={true}
+        />
+
+        <PayInvoiceDialog 
+          open={showPayInvoice}
+          onOpenChange={setShowPayInvoice}
+          paymentMethods={paymentMethods}
+          onConfirmPayment={handlePayInvoice}
         />
 
         <AddPaymentMethodDialog
