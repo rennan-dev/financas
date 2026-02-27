@@ -5,23 +5,35 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, title, isCredit = false }) {
+function AddExpenseDialog({
+  open,
+  onOpenChange,
+  onAddExpense,
+  paymentMethods,
+  title,
+  submitLabel = "Realizar Compra", // ← NOVO (permite customizar o texto sem quebrar outros usos)
+  isCredit = false
+}) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     const formData = new FormData(e.target);
+
     const expense = {
       description: formData.get("description"),
       amount: parseFloat(formData.get("amount")),
-      date: new Date(formData.get("date") + "T00:00:00").toISOString().split("T")[0],
-      paymentMethod: formData.get("paymentMethod"),
-      // installments: isCredit ? parseInt(formData.get("installments")) : 1 // <-- ANTIGO
-      installments: 1, // <-- MUDANÇA: Como o campo foi removido, enviamos 1
+      date: new Date(formData.get("date") + "T00:00:00")
+        .toISOString()
+        .split("T")[0],
+      paymentMethod: selectedPaymentMethod,
+      installments: 1, // continua fixo como já estava funcionando
     };
 
     onAddExpense(expense);
     onOpenChange(false);
+    setSelectedPaymentMethod("");
   };
 
   return (
@@ -30,6 +42,7 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
@@ -37,12 +50,12 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
               id="description"
               name="description"
               required
-              placeholder="Digite a descrição da despesa"
+              placeholder="Digite a descrição"
             />
           </div>
+
           <div className="space-y-2">
-            {/* // <-- MUDANÇA: Label alterada */}
-            <Label htmlFor="amount">Valor</Label> 
+            <Label htmlFor="amount">Valor</Label>
             <Input
               id="amount"
               name="amount"
@@ -53,9 +66,6 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
             />
           </div>
 
-          {/* // <-- MUDANÇA: Bloco de parcelas removido */}
-          {/* {isCredit && ( ... )} */}
-
           <div className="space-y-2">
             <Label htmlFor="date">Data</Label>
             <Input
@@ -65,11 +75,10 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
               required
             />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="paymentMethod">Método de Pagamento</Label>
             <Select
-              id="paymentMethod"
-              name="paymentMethod"
               value={selectedPaymentMethod}
               onValueChange={setSelectedPaymentMethod}
               required
@@ -77,21 +86,20 @@ function AddExpenseDialog({ open, onOpenChange, onAddExpense, paymentMethods, ti
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione um método" />
               </SelectTrigger>
+
               <SelectContent>
                 {paymentMethods.map((method) => (
-                  <SelectItem
-                    key={method.id}
-                    value={method.id.toString()}
-                  >
+                  <SelectItem key={method.id} value={method.id.toString()}>
                     {method.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* 🔴 agora o texto do botão é dinâmico */}
           <Button type="submit" className="w-full">
-            {/* // <-- MUDANÇA: Lógica do botão simplificada */}
-            Adicionar Compra
+            {submitLabel}
           </Button>
         </form>
       </DialogContent>
