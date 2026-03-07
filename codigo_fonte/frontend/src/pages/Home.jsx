@@ -578,6 +578,7 @@ function Home() {
           onAddExpense={handleAddDeposit}
           paymentMethods={paymentMethods}
           title="Registrar Entrada / Depósito"
+          submitLabel="Fazer Depósito"
         />
 
         <AddExpenseDialog
