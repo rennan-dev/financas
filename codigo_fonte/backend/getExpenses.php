@@ -35,7 +35,7 @@ $stmt = $conn->prepare("
     FROM expenses e
     JOIN payment_methods pm ON e.payment_method_id = pm.id
     WHERE e.user_id = ?
-    ORDER BY e.date DESC
+    ORDER BY e.date DESC, e.id DESC
 ");
 
 $stmt->bind_param("i", $user_id);
