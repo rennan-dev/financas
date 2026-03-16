@@ -1,19 +1,43 @@
 <?php
-error_reporting(0);
+/**
+ * addExpense.php
+ * Adiciona uma nova despesa/transação
+ * 
+ * Segurança:
+ * - Autenticação via sessão (obrigatória)
+ * - user_id obtido exclusivamente da sessão
+ * - Validação de ownership do método de pagamento
+ */
+
+// Configura headers CORS
 header("Access-Control-Allow-Origin: http://localhost:5173");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
-header("Content-Type: application/json");
+header("Content-Type: application/json; charset=UTF-8");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit(0);
+}
+
+include 'auth.php';
+include 'config.php';
 date_default_timezone_set('America/Manaus');
 
-include 'config.php';
+// Obrigatório: usuário deve estar autenticado
+$user_id = requireAuth();
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-$user_id = $data['user_id'];
-$payment_method_id = $data['payment_method_id'];
-$description = $data['description'];
+// Validação de dados obrigatórios
+if (!isset($data['payment_method_id']) || !isset($data['description']) || 
+    !isset($data['amount']) || !isset($data['date']) || !isset($data['payment_type'])) {
+    respondError("Dados incompletos. Preencha todos os campos obrigatórios.");
+}
+
+$payment_method_id = intval($data['payment_method_id']);
+$description = trim($data['description']);
 $amount = floatval($data['amount']);
 $date = $data['date'];
 $payment_type = $data['payment_type'];
@@ -23,6 +47,24 @@ $installments = isset($data['installments']) ? intval($data['installments']) : 1
 $invoice_card_id = isset($data['invoice_card_id']) ? intval($data['invoice_card_id']) : null;
 $invoice_month = isset($data['invoice_month']) ? intval($data['invoice_month']) : null;
 $invoice_year = isset($data['invoice_year']) ? intval($data['invoice_year']) : null;
+
+// Valida se o método de pagamento pertence ao usuário
+if (!validatePaymentMethodOwnership($conn, $payment_method_id, $user_id)) {
+    respondError("Método de pagamento inválido ou não pertence ao usuário.", 403);
+}
+
+// Validação básica de dados
+if (empty($description)) {
+    respondError("Descrição é obrigatória.");
+}
+
+if ($amount <= 0) {
+    respondError("Valor deve ser maior que zero.");
+}
+
+if (empty($date)) {
+    respondError("Data é obrigatória.");
+}
 
 $paid = ($payment_type === 'credit') ? 0 : 1;
 
@@ -51,14 +93,13 @@ if($stmt->execute()){
     $expense_id = $stmt->insert_id;
     $stmt->close();
 } else {
-    echo json_encode(["status" => "error", "message" => "Erro ao inserir despesa"]);
-    exit;
+    respondError("Erro ao inserir despesa.", 500);
 }
 
 if ($payment_type === 'invoice_payment') {
-    $sqlBalance = "UPDATE payment_methods SET balance = balance - ? WHERE id = ?";
+    $sqlBalance = "UPDATE payment_methods SET balance = balance - ? WHERE id = ? AND user_id = ?";
     $stmtBal = $conn->prepare($sqlBalance);
-    $stmtBal->bind_param("di", $amount, $payment_method_id);
+    $stmtBal->bind_param("dii", $amount, $payment_method_id, $user_id);
     $stmtBal->execute();
     $stmtBal->close();
 
@@ -80,33 +121,38 @@ if ($payment_type === 'invoice_payment') {
 }
 elseif ($payment_type === 'transfer') {
     // 1. Subtrai da conta de origem
-    $sqlBalanceOut = "UPDATE payment_methods SET balance = balance - ? WHERE id = ?";
+    $sqlBalanceOut = "UPDATE payment_methods SET balance = balance - ? WHERE id = ? AND user_id = ?";
     $stmtOut = $conn->prepare($sqlBalanceOut);
-    $stmtOut->bind_param("di", $amount, $payment_method_id);
+    $stmtOut->bind_param("dii", $amount, $payment_method_id, $user_id);
     $stmtOut->execute();
     $stmtOut->close();
 
     // 2. Adiciona na conta de destino
     $dest_id = isset($data['destination_account_id']) ? intval($data['destination_account_id']) : null;
     if ($dest_id) {
-        $sqlBalanceIn = "UPDATE payment_methods SET balance = balance + ? WHERE id = ?";
+        // Valida se a conta de destino também pertence ao usuário
+        if (!validatePaymentMethodOwnership($conn, $dest_id, $user_id)) {
+            respondError("Conta de destino inválida.", 403);
+        }
+        
+        $sqlBalanceIn = "UPDATE payment_methods SET balance = balance + ? WHERE id = ? AND user_id = ?";
         $stmtIn = $conn->prepare($sqlBalanceIn);
-        $stmtIn->bind_param("di", $amount, $dest_id);
+        $stmtIn->bind_param("dii", $amount, $dest_id, $user_id);
         $stmtIn->execute();
         $stmtIn->close();
     }
 }
 elseif ($payment_type !== 'credit' && $payment_type !== 'deposit') {
-    $sqlBalance = "UPDATE payment_methods SET balance = balance - ? WHERE id = ?";
+    $sqlBalance = "UPDATE payment_methods SET balance = balance - ? WHERE id = ? AND user_id = ?";
     $stmt2 = $conn->prepare($sqlBalance);
-    $stmt2->bind_param("di", $amount, $payment_method_id);
+    $stmt2->bind_param("dii", $amount, $payment_method_id, $user_id);
     $stmt2->execute();
     $stmt2->close();
 }
 elseif ($payment_type === 'deposit') {
-    $sqlBalance = "UPDATE payment_methods SET balance = balance + ? WHERE id = ?";
+    $sqlBalance = "UPDATE payment_methods SET balance = balance + ? WHERE id = ? AND user_id = ?";
     $stmt3 = $conn->prepare($sqlBalance);
-    $stmt3->bind_param("di", $amount, $payment_method_id);
+    $stmt3->bind_param("dii", $amount, $payment_method_id, $user_id);
     $stmt3->execute();
     $stmt3->close();
 }
@@ -136,20 +182,5 @@ if ($payment_type === 'credit' && $installments > 1) {
   }
 }
 
-// Cria um objeto com os dados da despesa para retorno
-$expense_return = [
-  "id" => $expense_id,
-  "user_id" => $user_id,
-  "payment_method_id" => $payment_method_id,
-  "description" => $description,
-  "amount" => $amount,
-  "date" => $date,
-  "payment_type" => $payment_type,
-  "is_recurring" => $is_recurring,
-  "paid" => ($payment_type !== 'credit') ? 1 : 0,
-  "paid_with_method_id" => ($payment_type !== 'credit') ? $payment_method_id : null
-];
-
-echo json_encode(["status" => "success", "id" => $expense_id]);
+respondSuccess(["id" => $expense_id], "Despesa adicionada com sucesso", 201);
 $conn->close();
-?>
