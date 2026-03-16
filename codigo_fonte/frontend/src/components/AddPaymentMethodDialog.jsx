@@ -10,15 +10,8 @@ function AddPaymentMethodDialog({ open, onOpenChange, onAddPaymentMethod }) {
     const formData = new FormData(e.target);
     const name = formData.get("name");
 
-    // Captura o ID do usuário do sessionStorage
-    const user = JSON.parse(sessionStorage.getItem("user") || "{}");
-    if (!user.id) {
-      window.alert("Erro: Usuário não autenticado.");
-      return;
-    }
-
-    const user_id = user.id;
-    const methodData = { user_id, name };
+    // user_id agora é obtido via sessão no backend
+    const methodData = { name };
 
     try {
       const response = await fetch("http://localhost/api_financas/addPaymentMethod.php", {

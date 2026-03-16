@@ -1,28 +1,33 @@
 <?php
+/**
+ * getExpenses.php
+ * Lista todas as despesas do usuário autenticado
+ * 
+ * Segurança:
+ * - Autenticação via sessão (obrigatória)
+ * - user_id obtido exclusivamente da sessão
+ * - Retorna apenas despesas do usuário logado
+ */
+
+// Configura headers CORS
 header("Access-Control-Allow-Origin: http://localhost:5173");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
-header("Content-Type: application/json");
+header("Content-Type: application/json; charset=UTF-8");
 
-// Mostra erros, caso eles aconteçam (bom para debugar)
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-include 'config.php';
-
-$user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
-
-if ($user_id === 0) {
-    http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "User ID ausente"]);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit(0);
 }
 
-// SQL refeito: Busca simples na 'expenses'
-// Faz JOIN com 'payment_methods' para pegar o nome (pm.name)
-// O ExpenseList.jsx espera esses nomes de coluna (AS)
+include 'auth.php';
+include 'config.php';
+
+// Obrigatório: usuário deve estar autenticado
+$user_id = requireAuth();
+
+// Busca despesas do usuário autenticado
 $stmt = $conn->prepare("
     SELECT 
         e.id AS expense_id,
@@ -48,4 +53,3 @@ $conn->close();
 
 // Retorna o JSON limpo
 echo json_encode($expenses);
-?>

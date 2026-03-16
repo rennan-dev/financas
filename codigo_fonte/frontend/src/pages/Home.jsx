@@ -44,7 +44,8 @@ function Home() {
       return;
     }
 
-    fetch(`http://localhost/api_financas/getExpenses.php?user_id=${user.id}`, {
+    // user_id agora é obtido via sessão no backend
+    fetch(`http://localhost/api_financas/getExpenses.php`, {
       method: "GET",
       credentials: "include",
     })
@@ -73,10 +74,8 @@ function Home() {
   };
 
   const fetchPaymentMethods = () => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
-    fetch(`http://localhost/api_financas/getPaymentMethods.php?user_id=${user.id}`, {
+    // user_id agora é obtido via sessão no backend
+    fetch(`http://localhost/api_financas/getPaymentMethods.php`, {
       method: "GET",
       credentials: "include",
     })
@@ -96,9 +95,8 @@ function Home() {
   };
 
   const handleAddDeposit = async (data) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    // user_id agora é obtido via sessão no backend
     const body = {
-      user_id: user.id,
       payment_method_id: data.paymentMethod,
       description: data.description,
       amount: data.amount,
@@ -125,11 +123,8 @@ function Home() {
   };
 
   const handleAddExpense = async (expense) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
+    // user_id agora é obtido via sessão no backend
     const body = {
-      user_id: user.id,
       payment_method_id: expense.paymentMethod,
       description: expense.description,
       amount: expense.amount,
@@ -173,10 +168,8 @@ function Home() {
   };
 
   const handlePayInvoice = async (payload) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
-    const fullPayload = { ...payload, user_id: user.id };
+    // user_id agora é obtido via sessão no backend
+    const fullPayload = { ...payload };
 
     try {
       const response = await fetch("http://localhost/api_financas/addExpense.php", {
@@ -200,17 +193,14 @@ function Home() {
 };
 
   const handleAddRecurringExpense = async (expense) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
     const selectedMethod = paymentMethods.find(
       (m) => m.id === parseInt(expense.paymentMethod)
     );
 
     if (!selectedMethod) return;
 
+    // user_id agora é obtido via sessão no backend
     const payload = {
-      user_id: user.id,
       payment_method_id: selectedMethod.id,
       description: expense.description,
       amount: expense.amount,
@@ -262,10 +252,8 @@ function Home() {
   };
 
   const handleUpdateBalance = async (paymentMethodId, newBalance) => {
-      const user = JSON.parse(sessionStorage.getItem("user"));
-      if (!user) return;
-
-      const success = await updateBalance(user.id, paymentMethodId, newBalance);
+      // user_id agora é obtido via sessão no backend
+      const success = await updateBalance(paymentMethodId, newBalance);
 
       if (success) {
         setPaymentMethods((prevMethods) =>
@@ -280,11 +268,8 @@ function Home() {
   };
 
   const handleAddBoleto = async (expense) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
+    // user_id agora é obtido via sessão no backend
     const body = {
-      user_id: user.id,
       payment_method_id: expense.paymentMethod,
       description: expense.description,
       amount: expense.amount,
@@ -323,13 +308,10 @@ function Home() {
   };
 
   const handleAddTransfer = async (transferData) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
     const destMethod = paymentMethods.find((m) => m.id.toString() === transferData.destinationMethodId);
 
+    // user_id agora é obtido via sessão no backend
     const payload = {
-      user_id: user.id,
       payment_method_id: transferData.sourceMethodId,
       destination_account_id: transferData.destinationMethodId,
       description: transferData.description || `Transferência para ${destMethod?.name}`,
@@ -370,9 +352,6 @@ function Home() {
   };
 
   const onPayCreditExpense = async (payId, selectedPaymentMethod) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
     try {
       const response = await fetch("http://localhost/api_financas/payCreditExpense.php", {
         method: "POST",
@@ -381,7 +360,7 @@ function Home() {
         body: JSON.stringify({
           pay_id: payId,
           payment_method_id: selectedPaymentMethod?.id,
-          user_id: user?.id,
+          // user_id agora é obtido via sessão no backend
         }),
       });
 
@@ -404,13 +383,14 @@ function Home() {
     }
   };
 
-  const updateBalance = async (user_id, paymentMethodId, newBalance) => {
+  const updateBalance = async (paymentMethodId, newBalance) => {
     try {
       const response = await fetch("http://localhost/api_financas/updateBalance.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ user_id, payment_method_id: paymentMethodId, newBalance }),
+        // user_id agora é obtido via sessão no backend
+        body: JSON.stringify({ payment_method_id: paymentMethodId, newBalance }),
       });
       const data = await response.json();
 
@@ -439,11 +419,8 @@ function Home() {
   };
 
   const handleSaveEditedExpense = async (updatedExpense) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
+    // user_id agora é obtido via sessão no backend
     const payload = {
-        user_id: user.id,
         expense_id: updatedExpense.expense_id || updatedExpense.id,
         description: updatedExpense.description,
         amount: updatedExpense.amount,
@@ -483,16 +460,13 @@ function Home() {
     );
     if (!confirmDelete) return;
 
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
     try {
       const response = await fetch("http://localhost/api_financas/deleteExpense.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        // user_id agora é obtido via sessão no backend
         body: JSON.stringify({
-          user_id: user.id,
           expense_id: expense.expense_id || expense.id
         }),
       });

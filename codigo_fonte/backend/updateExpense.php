@@ -1,45 +1,77 @@
 <?php
-// updateExpense.php
-error_reporting(E_ALL);
-ini_set('display_errors', 0); 
+/**
+ * updateExpense.php
+ * Atualiza uma despesa existente
+ * 
+ * Segurança:
+ * - Autenticação via sessão (obrigatória)
+ * - user_id obtido exclusivamente da sessão
+ * - Validação de ownership da despesa e método de pagamento
+ */
 
+// Configura headers CORS
 header("Access-Control-Allow-Origin: http://localhost:5173");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
-header("Content-Type: application/json");
-date_default_timezone_set('America/Manaus');
+header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    exit;
+    exit(0);
 }
 
+include 'auth.php';
 include 'config.php';
+date_default_timezone_set('America/Manaus');
+
+// Obrigatório: usuário deve estar autenticado
+$user_id = requireAuth();
+
+$input = json_decode(file_get_contents('php://input'), true);
+
+// Validações básicas
+if (!isset($input['expense_id']) && !isset($input['id'])) {
+    respondError("ID da despesa ausente.");
+}
+
+$expense_id = isset($input['expense_id']) ? intval($input['expense_id']) : intval($input['id']);
+$new_description = isset($input['description']) ? trim($input['description']) : '';
+$new_amount = isset($input['amount']) ? floatval($input['amount']) : 0;
+$new_date = isset($input['date']) ? $input['date'] : '';
+$new_payment_method_id = isset($input['payment_method_id']) ? intval($input['payment_method_id']) : 0;
+$new_type = isset($input['payment_type']) ? $input['payment_type'] : '';
+
+// Validações de dados
+if (empty($new_description)) {
+    respondError("Descrição é obrigatória.");
+}
+
+if ($new_amount <= 0) {
+    respondError("Valor deve ser maior que zero.");
+}
+
+if (empty($new_date)) {
+    respondError("Data é obrigatória.");
+}
+
+if ($new_payment_method_id <= 0) {
+    respondError("Método de pagamento inválido.");
+}
+
+// Valida se a despesa pertence ao usuário
+if (!validateExpenseOwnership($conn, $expense_id, $user_id)) {
+    respondError("Despesa não encontrada ou acesso negado.", 403);
+}
+
+// Valida se o novo método de pagamento pertence ao usuário
+if (!validatePaymentMethodOwnership($conn, $new_payment_method_id, $user_id)) {
+    respondError("Método de pagamento inválido ou não pertence ao usuário.", 403);
+}
+
+$conn->begin_transaction();
 
 try {
-    $input = file_get_contents('php://input');
-    $data = json_decode($input, true);
-
-    // Validações
-    if (!isset($data['user_id']) || !isset($data['payment_type'])) {
-        throw new Exception("Dados incompletos (user_id ou payment_type).");
-    }
-
-    $expense_id = isset($data['expense_id']) ? $data['expense_id'] : (isset($data['id']) ? $data['id'] : null);
-    if (!$expense_id) throw new Exception("ID da despesa ausente.");
-
-    $user_id = $data['user_id'];
-    $new_description = $data['description'];
-    $new_amount = floatval($data['amount']);
-    $new_date = $data['date'];
-    $new_payment_method_id = intval($data['payment_method_id']);
-    
-    // AQUI ESTÁ A CORREÇÃO: Usamos o tipo enviado pelo front, não buscamos no banco de métodos
-    $new_type = $data['payment_type']; 
-
-    $conn->begin_transaction();
-
     // 1. BUSCAR DADOS ANTIGOS (Para estorno)
     $stmtOld = $conn->prepare("SELECT amount, payment_method_id, payment_type FROM expenses WHERE id = ? AND user_id = ?");
     $stmtOld->bind_param("ii", $expense_id, $user_id);
@@ -59,14 +91,13 @@ try {
     // 2. LÓGICA DE SALDO - ESTORNO
     // Se a despesa antiga era débito ou dinheiro, devolve o valor para o saldo antigo
     if ($old_type !== 'credit') {
-        $stmtRevert = $conn->prepare("UPDATE payment_methods SET balance = balance + ? WHERE id = ?");
-        $stmtRevert->bind_param("di", $old_amount, $old_pm_id);
+        $stmtRevert = $conn->prepare("UPDATE payment_methods SET balance = balance + ? WHERE id = ? AND user_id = ?");
+        $stmtRevert->bind_param("dii", $old_amount, $old_pm_id, $user_id);
         $stmtRevert->execute();
         $stmtRevert->close();
     }
 
     // 3. ATUALIZAR A DESPESA
-    // Se for crédito, não está pago (paid=0). Se for débito, está pago (paid=1).
     $is_paid = ($new_type !== 'credit') ? 1 : 0;
     $paid_with = ($new_type !== 'credit') ? $new_payment_method_id : null;
 
@@ -95,30 +126,24 @@ try {
     );
 
     if (!$stmtUpdate->execute()) {
-        throw new Exception("Erro no UPDATE: " . $stmtUpdate->error);
+        throw new Exception("Erro ao atualizar despesa.");
     }
     $stmtUpdate->close();
 
     // 4. LÓGICA DE SALDO - COBRANÇA NOVA
-    // Se a nova versão continua sendo débito (ou virou débito), desconta do novo método
     if ($new_type !== 'credit') {
-        $stmtCharge = $conn->prepare("UPDATE payment_methods SET balance = balance - ? WHERE id = ?");
-        $stmtCharge->bind_param("di", $new_amount, $new_payment_method_id);
+        $stmtCharge = $conn->prepare("UPDATE payment_methods SET balance = balance - ? WHERE id = ? AND user_id = ?");
+        $stmtCharge->bind_param("dii", $new_amount, $new_payment_method_id, $user_id);
         $stmtCharge->execute();
         $stmtCharge->close();
     }
 
     $conn->commit();
-
-    echo json_encode([
-        "status" => "success", 
-        "message" => "Atualizado com sucesso!"
-    ]);
+    respondSuccess([], "Despesa atualizada com sucesso!");
 
 } catch (Exception $e) {
-    if (isset($conn)) $conn->rollback();
-    echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+    $conn->rollback();
+    respondError($e->getMessage(), 500);
 }
 
-if (isset($conn)) $conn->close();
-?>
+$conn->close();

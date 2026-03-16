@@ -38,13 +38,8 @@ function Cards() {
   const [cardToEdit, setCardToEdit] = useState(null);
 
   const fetchPaymentMethods = () => {
-    const user = sessionStorage.getItem("user");
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    const userObj = JSON.parse(user);
-    fetch(`http://localhost/api_financas/getPaymentMethods.php?user_id=${userObj.id}`, {
+    // user_id agora é obtido via sessão no backend
+    fetch(`http://localhost/api_financas/getPaymentMethods.php`, {
       method: "GET",
       credentials: "include",
     })
@@ -131,16 +126,13 @@ function Cards() {
   };
 
   const handleUpdateBalance = async (paymentMethodId, newBalance) => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) return;
-
+    // user_id agora é obtido via sessão no backend
     try {
       const response = await fetch("http://localhost/api_financas/updateBalance.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ 
-            user_id: user.id, 
             payment_method_id: paymentMethodId, 
             newBalance 
         }),

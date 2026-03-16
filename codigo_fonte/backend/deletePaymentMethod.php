@@ -1,8 +1,15 @@
 <?php
-session_start();
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+/**
+ * deletePaymentMethod.php
+ * Exclui um método de pagamento
+ * 
+ * Segurança:
+ * - Autenticação via sessão (obrigatória)
+ * - user_id obtido exclusivamente da sessão
+ * - Validação de ownership do método de pagamento
+ */
 
+// Configura headers CORS
 header("Access-Control-Allow-Origin: http://localhost:5173");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -10,60 +17,45 @@ header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    echo json_encode(["status" => "success", "message" => "Options request received"]);
-    flush();
+    http_response_code(200);
     exit(0);
 }
 
-$inputRaw = file_get_contents("php://input");
-$input = json_decode($inputRaw, true);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['_method']) && strtoupper($input['_method']) === 'DELETE') {
-    // Prossegue para deleção
-} else {
-    http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "Método inválido"]);
-    flush();
-    exit;
-}
-
-if (!isset($_GET['id'])) {
-    http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "ID é obrigatório"]);
-    flush();
-    exit;
-}
-
+include 'auth.php';
 include 'config.php';
 
-if (!$conn) {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Erro na conexão com o banco de dados"]);
-    flush();
-    exit;
+// Obrigatório: usuário deve estar autenticado
+$user_id = requireAuth();
+
+$input = json_decode(file_get_contents('php://input'), true);
+
+// Suporta tanto método DELETE via POST quanto GET com parâmetro
+$payment_method_id = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['id'])) {
+    $payment_method_id = intval($input['id']);
+} elseif (isset($_GET['id'])) {
+    $payment_method_id = intval($_GET['id']);
 }
 
-$id = intval($_GET['id']);
-error_reporting(E_ALL);
-
-$stmt = $conn->prepare("DELETE FROM payment_methods WHERE id = ?");
-if (!$stmt) {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Erro na preparação da query"]);
-    flush();
-    exit;
+if (!$payment_method_id) {
+    respondError("ID do método de pagamento é obrigatório.");
 }
-$stmt->bind_param("i", $id);
+
+// Valida se o método de pagamento pertence ao usuário
+if (!validatePaymentMethodOwnership($conn, $payment_method_id, $user_id)) {
+    respondError("Método de pagamento não encontrado ou acesso negado.", 403);
+}
+
+// Excluir o método de pagamento
+$stmt = $conn->prepare("DELETE FROM payment_methods WHERE id = ? AND user_id = ?");
+$stmt->bind_param("ii", $payment_method_id, $user_id);
 
 if ($stmt->execute()) {
-    echo json_encode(["status" => "success", "message" => "Cartão deletado com sucesso"]);
-    flush();
+    respondSuccess([], "Método de pagamento excluído com sucesso.");
 } else {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Erro ao deletar o cartão"]);
-    flush();
+    respondError("Erro ao excluir o método de pagamento.", 500);
 }
 
 $stmt->close();
 $conn->close();
-?>

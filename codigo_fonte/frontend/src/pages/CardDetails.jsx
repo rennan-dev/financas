@@ -27,14 +27,11 @@ function CardDetails() {
   }, [id]);
 
   const fetchData = async () => {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
     try {
-      const methodsRes = await fetch(`http://localhost/api_financas/getPaymentMethods.php?user_id=${user.id}`);
+      // user_id agora é obtido via sessão no backend
+      const methodsRes = await fetch(`http://localhost/api_financas/getPaymentMethods.php`, {
+        credentials: "include",
+      });
       const methodsData = await methodsRes.json();
       
       if (methodsData.status === "success") {
@@ -44,7 +41,9 @@ function CardDetails() {
         }
       }
 
-      const expensesRes = await fetch(`http://localhost/api_financas/getExpenses.php?user_id=${user.id}`);
+      const expensesRes = await fetch(`http://localhost/api_financas/getExpenses.php`, {
+        credentials: "include",
+      });
       const expensesData = await expensesRes.json();
 
       const expensesParsed = expensesData.map(expense => {
