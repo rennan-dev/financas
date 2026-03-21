@@ -13,7 +13,7 @@ import {
   YAxis,
   CartesianGrid
 } from "recharts";
-import { Wallet } from "lucide-react";
+import { Wallet, CreditCard } from "lucide-react";
 import ExpenseList from "@/components/ExpenseList";
 import MonthSelector from "@/components/MonthSelector";
 import UpdateBalanceDialog from "@/components/UpdateBalanceDialog";
@@ -74,6 +74,19 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
       );
     });
   }, [expenses, selectedMonth]);
+
+  const totalExpensesCredit = useMemo(() => {
+    return filteredExpenses.reduce((acc, expense) => {
+      if (expense.payment_type !== 'credit') {
+        return acc;
+      }
+      
+      const valueStr = expense.installment_id ? expense.installment_amount : expense.total_amount;
+      const amount = parseFloat(typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr);
+      
+      return acc + (isNaN(amount) ? 0 : amount);
+    }, 0);
+  }, [filteredExpenses]);
 
   const totalExpenses = useMemo(() => {
     return filteredExpenses.reduce((acc, expense) => {
@@ -168,7 +181,7 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
         >
           {/* Saldo Total */}
           <div className="p-6 rounded-2xl bg-card border border-border shadow-md">
-            <div className="flex justify-between items-start mb-2">
+            <div className="flex justify-between items-start mb-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Saldo Total</p>
                 <h2 className="text-3xl sm:text-4xl font-bold mt-1 text-primary">
@@ -177,13 +190,32 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 mt-4">
-              <div className="flex items-center justify-between text-sm bg-secondary/50 p-2 rounded-lg">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Wallet className="w-4 h-4" />
-                  <span>Gasto no mês (Crédito + Débito):</span>
+            {/* Divisor suave opcional */}
+            <div className="h-px w-full bg-border/50 mb-4" />
+
+            {/* Detalhes de Gastos em Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Box: Gasto no Crédito */}
+              <div className="flex flex-col bg-secondary/40 p-3 rounded-xl border border-secondary/60 relative overflow-hidden">
+                {/* Detalhe visual de cor para destacar o crédito (opcional) */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500/70" /> 
+                
+                <div className="flex items-center gap-1.5 text-muted-foreground mb-1 pl-1">
+                  <CreditCard className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">No Crédito</span>
                 </div>
-                <span className="font-bold text-foreground">
+                <span className="font-semibold text-foreground text-sm sm:text-base pl-1">
+                  R$ {totalExpensesCredit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              {/* Box: Gasto Total */}
+              <div className="flex flex-col bg-secondary/40 p-3 rounded-xl border border-secondary/60">
+                <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                  <Wallet className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Gasto Total</span>
+                </div>
+                <span className="font-semibold text-foreground text-sm sm:text-base">
                   R$ {totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </span>
               </div>
