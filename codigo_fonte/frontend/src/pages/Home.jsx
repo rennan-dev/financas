@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import Dashboard from "@/components/Dashboard";
 import AddExpenseDialog from "@/components/AddExpenseDialog";
 import AddPaymentMethodDialog from "@/components/AddPaymentMethodDialog";
+import FloatingAddButton from "@/components/FloatingAddButton";
 import { Button } from "@/components/ui/button";
 import { Plus, CreditCard, Wallet, Banknote, TrendingUp, FileText, Barcode, ArrowRightLeft } from "lucide-react";
 import AddTransferDialog from "@/components/AddTransferDialog";
@@ -494,7 +495,7 @@ function Home() {
           <div className="flex justify-end w-full">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="w-full sm:w-auto gap-2 font-semibold shadow-lg bg-background text-foreground border border-border hover:bg-muted transition-all active:scale-95">
+                <Button className="hidden sm:flex w-full sm:w-auto gap-2 font-semibold shadow-lg bg-background text-foreground border border-border hover:bg-muted transition-all active:scale-95">
                   <Plus className="h-5 w-5" />
                   Nova Transação
                 </Button>
@@ -544,6 +545,17 @@ function Home() {
             />
           </div>
         </div>
+
+        {/* BOTÃO FLUTUANTE PARA MOBILE */}
+        <FloatingAddButton
+          onAddDeposit={() => setShowAddDeposit(true)}
+          onAddExpense={() => setShowAddExpense(true)}
+          onAddCreditExpense={() => setShowAddCreditExpense(true)}
+          onAddTransfer={() => setShowAddTransfer(true)}
+          onPayInvoice={() => setShowPayInvoice(true)}
+          onAddBoleto={() => setShowAddBoleto(true)}
+          onAddPaymentMethod={() => setShowAddPaymentMethod(true)}
+        />
 
         {/* DIALOGS */}
         <AddExpenseDialog
