@@ -96,11 +96,18 @@ function Home() {
   };
 
   const handleAddDeposit = async (data) => {
-    // user_id agora é obtido via sessão no backend
+    const methodId = parseInt(data.paymentMethod, 10);
+    
+    if (!methodId || isNaN(methodId)) {
+      console.error("ERRO: O ID da conta (paymentMethod) está vazio ou inválido!", data);
+      alert("Por favor, selecione uma conta válida para o depósito.");
+      return;
+    }
+
     const body = {
-      payment_method_id: data.paymentMethod,
+      payment_method_id: methodId,
       description: data.description,
-      amount: data.amount,
+      amount: parseFloat(data.amount),
       date: data.date,
       payment_type: 'deposit',
       installments: 1
@@ -110,21 +117,26 @@ function Home() {
       const response = await fetch("http://localhost/api_financas/addExpense.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(body),
       });
+      
       const result = await response.json();
+      
       if (result.status === "success") {
         fetchExpenses();
         fetchPaymentMethods();
         toast({ title: "Depósito realizado!", description: "Saldo atualizado com sucesso." });
+      } else {
+        console.error("Erro do PHP:", result.message);
+        toast({ variant: "destructive", title: "Erro", description: result.message });
       }
     } catch (error) {
-      console.error(error);
+      console.error("Erro na requisição Fetch:", error);
     }
   };
 
   const handleAddExpense = async (expense) => {
-    // user_id agora é obtido via sessão no backend
     const body = {
       payment_method_id: expense.paymentMethod,
       description: expense.description,
