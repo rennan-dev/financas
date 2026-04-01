@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { API_URL } from "@/config";
 
 function CreateAccount() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ function CreateAccount() {
     }
 
     try {
-      const response = await fetch("http://localhost/api_financas/register.php", {
+      const response = await fetch(`${API_URL}/register.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

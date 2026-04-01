@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { API_URL } from "@/config";
 
 function Home() {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ function Home() {
     }
 
     // user_id agora é obtido via sessão no backend
-    fetch(`http://localhost/api_financas/getExpenses.php`, {
+    fetch(`${API_URL}/getExpenses.php`, {
       method: "GET",
       credentials: "include",
     })
@@ -76,7 +77,7 @@ function Home() {
 
   const fetchPaymentMethods = () => {
     // user_id agora é obtido via sessão no backend
-    fetch(`http://localhost/api_financas/getPaymentMethods.php`, {
+    fetch(`${API_URL}/getPaymentMethods.php`, {
       method: "GET",
       credentials: "include",
     })
@@ -114,7 +115,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch(`${API_URL}/addExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -147,7 +148,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch(`${API_URL}/addExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -185,7 +186,7 @@ function Home() {
     const fullPayload = { ...payload };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch(`${API_URL}/addExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -224,7 +225,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch(`${API_URL}/addExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -292,7 +293,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch(`${API_URL}/addExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -335,7 +336,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addExpense.php", {
+      const response = await fetch(`${API_URL}/addExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -366,7 +367,7 @@ function Home() {
 
   const onPayCreditExpense = async (payId, selectedPaymentMethod) => {
     try {
-      const response = await fetch("http://localhost/api_financas/payCreditExpense.php", {
+      const response = await fetch(`${API_URL}/payCreditExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -398,7 +399,7 @@ function Home() {
 
   const updateBalance = async (paymentMethodId, newBalance) => {
     try {
-      const response = await fetch("http://localhost/api_financas/updateBalance.php", {
+      const response = await fetch(`${API_URL}/updateBalance.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -443,7 +444,7 @@ function Home() {
     };
 
     try {
-      const response = await fetch("http://localhost/api_financas/updateExpense.php", {
+      const response = await fetch(`${API_URL}/updateExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -474,7 +475,7 @@ function Home() {
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch("http://localhost/api_financas/deleteExpense.php", {
+      const response = await fetch(`${API_URL}/deleteExpense.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
