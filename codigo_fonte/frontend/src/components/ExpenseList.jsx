@@ -15,7 +15,9 @@ import {
   TrendingUp,
   Settings,
   Barcode,
-  ArrowRightLeft
+  ArrowRightLeft,
+  ChevronDown,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +30,7 @@ import {
 function ExpenseList({ expenses, onEdit, onDelete, selectedMonth }) {
   const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const getPaymentTypeLabel = (type) => {
     if (type === "credit") return "Crédito";
@@ -143,62 +146,76 @@ function ExpenseList({ expenses, onEdit, onDelete, selectedMonth }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={filter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("all")}
-            className="gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Tudo
-          </Button>
-          <Button
-            variant={filter === "debit" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("debit")}
-            className="gap-2"
-          >
-            <Banknote className="h-4 w-4" />
-            Débito
-          </Button>
-          <Button
-            variant={filter === "credit" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("credit")}
-            className="gap-2"
-          >
-            <CreditCard className="h-4 w-4" />
-            Crédito
-          </Button>
-          <Button
-            variant={filter === "deposit" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("deposit")}
-            className="gap-2"
-          >
-            <TrendingUp className="h-4 w-4" />
-            Depósito
-          </Button>
-          <Button
-            variant={filter === "transfer" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("transfer")}
-            className="gap-2"
-          >
-            <ArrowRightLeft className="h-4 w-4" />
-            Transferência
-          </Button>
-          <Button
-            variant={filter === "boleto" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("boleto")}
-            className="gap-2"
-          >
-            <Barcode className="h-4 w-4" />
-            Boleto
-          </Button>
-        </div>
+        <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 min-w-[160px] justify-between"
+            >
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="flex items-center gap-1.5">
+                {filter === "all" && "Todos"}
+                {filter === "debit" && "Débito"}
+                {filter === "credit" && "Crédito"}
+                {filter === "deposit" && "Depósito"}
+                {filter === "transfer" && "Transferência"}
+                {filter === "boleto" && "Boleto"}
+              </span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[200px]">
+            <DropdownMenuItem 
+              onClick={() => { setFilter("all"); setFilterOpen(false); }}
+              className="gap-2 cursor-pointer"
+            >
+              <Filter className="h-4 w-4" />
+              <span>Todos</span>
+              {filter === "all" && <Check className="h-4 w-4 ml-auto" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => { setFilter("debit"); setFilterOpen(false); }}
+              className="gap-2 cursor-pointer"
+            >
+              <Banknote className="h-4 w-4" />
+              <span>Débito</span>
+              {filter === "debit" && <Check className="h-4 w-4 ml-auto" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => { setFilter("credit"); setFilterOpen(false); }}
+              className="gap-2 cursor-pointer"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span>Crédito</span>
+              {filter === "credit" && <Check className="h-4 w-4 ml-auto" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => { setFilter("deposit"); setFilterOpen(false); }}
+              className="gap-2 cursor-pointer"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span>Depósito</span>
+              {filter === "deposit" && <Check className="h-4 w-4 ml-auto" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => { setFilter("transfer"); setFilterOpen(false); }}
+              className="gap-2 cursor-pointer"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              <span>Transferência</span>
+              {filter === "transfer" && <Check className="h-4 w-4 ml-auto" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => { setFilter("boleto"); setFilterOpen(false); }}
+              className="gap-2 cursor-pointer"
+            >
+              <Barcode className="h-4 w-4" />
+              <span>Boleto</span>
+              {filter === "boleto" && <Check className="h-4 w-4 ml-auto" />}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {isHomeView && (
           <Button 
