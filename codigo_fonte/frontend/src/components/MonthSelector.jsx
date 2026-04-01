@@ -18,7 +18,7 @@ function MonthSelector({ selectedMonth, onMonthChange }) {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between w-full md:justify-start md:w-auto md:gap-2">
       <Button
         variant="outline"
         size="icon"
