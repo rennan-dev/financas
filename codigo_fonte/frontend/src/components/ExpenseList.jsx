@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
+import { jsPDF } from "jspdf";
 import { 
   Repeat, 
   MoreVertical, 
@@ -24,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-function ExpenseList({ expenses, onEdit, onDelete }) {
+function ExpenseList({ expenses, onEdit, onDelete, selectedMonth }) {
   const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
 
@@ -65,6 +66,79 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
   };
 
   const isHomeView = !!onEdit; 
+
+  const downloadExpensesPDF = () => {
+    const doc = new jsPDF();
+    const monthName = selectedMonth 
+      ? format(selectedMonth, "MMMM 'de' yyyy", { locale: ptBR })
+      : format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
+
+    // Título
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Relatório de Despesas", 14, 20);
+
+    // Subtítulo com mês
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Mês: ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`, 14, 30);
+
+    // Linha separadora
+    doc.setLineWidth(0.5);
+    doc.line(14, 33, 196, 33);
+
+    // Cabeçalho da tabela
+    let yPosition = 42;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Descrição", 14, yPosition);
+    doc.text("Data", 75, yPosition);
+    doc.text("Tipo", 105, yPosition);
+    doc.text("Conta/Cartão", 135, yPosition);
+    doc.text("Valor", 180, yPosition);
+
+    // Linha separadora
+    doc.setLineWidth(0.3);
+    doc.line(14, yPosition + 2, 196, yPosition + 2);
+
+    // Dados das despesas
+    yPosition += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+
+    expenses.forEach((expense) => {
+      if (yPosition > 270) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      const displayDate = expense.due_date || expense.expense_date;
+      const formattedDate = format(new Date(displayDate), "dd/MM/yyyy");
+      const value = `R$ ${parseFloat(expense.total_amount || expense.amount || 0).toFixed(2)}`;
+      
+      const typeLabel = getPaymentTypeLabel(expense.payment_type);
+
+      doc.text(expense.description || "-", 14, yPosition);
+      doc.text(formattedDate, 75, yPosition);
+      doc.text(typeLabel, 105, yPosition);
+      doc.text(expense.payment_method_name || "-", 135, yPosition);
+      doc.text(value, 180, yPosition);
+
+      yPosition += 7;
+    });
+
+    // Total
+    const total = expenses.reduce((acc, e) => acc + parseFloat(e.total_amount || e.amount || 0), 0);
+    yPosition += 5;
+    doc.setLineWidth(0.5);
+    doc.line(14, yPosition, 196, yPosition);
+    yPosition += 8;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(`Movimentações: R$ ${total.toFixed(2)}`, 14, yPosition);
+
+    doc.save(`despesas_${monthName.replace(" ", "_")}.pdf`);
+  };
 
   return (
     <div className="space-y-4">
@@ -130,11 +204,15 @@ function ExpenseList({ expenses, onEdit, onDelete }) {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => navigate("/cards")}
+            onClick={() => downloadExpensesPDF()}
             className="text-muted-foreground hover:text-primary gap-2"
           >
-            <Settings className="h-4 w-4" />
-            Gerenciar Cartões
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Baixar PDF
           </Button>
         )}
       </div>

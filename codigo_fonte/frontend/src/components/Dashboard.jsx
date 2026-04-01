@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   PieChart,
@@ -13,7 +14,8 @@ import {
   YAxis,
   CartesianGrid
 } from "recharts";
-import { Wallet, CreditCard } from "lucide-react";
+import { Wallet, CreditCard, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import ExpenseList from "@/components/ExpenseList";
 import MonthSelector from "@/components/MonthSelector";
 import UpdateBalanceDialog from "@/components/UpdateBalanceDialog";
@@ -59,6 +61,7 @@ const CustomLineTooltip = ({ active, payload, label }) => {
 };
 
 function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, onEditExpense, onDeleteExpense }) {
+  const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [showUpdateBalance, setShowUpdateBalance] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
@@ -224,9 +227,20 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
 
           {/* Lista de Contas */}
           <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-            <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">
-              Minhas Contas
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
+                Minhas Contas
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate("/cards")}
+                className="text-muted-foreground hover:text-primary gap-2 h-7"
+              >
+                <Settings className="h-4 w-4" />
+                Gerenciar Cartões
+              </Button>
+            </div>
             
             <div className="space-y-3 max-h-none lg:max-h-[210px] lg:overflow-y-auto lg:pr-2">
               {paymentMethods
@@ -362,12 +376,13 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
         </div>
         
         <div className="overflow-x-auto">
-          <ExpenseList
-            expenses={filteredExpenses}
-            debitMethods={paymentMethods.filter((m) => m.type !== "credit")}
-            onEdit={onEditExpense}
-            onDelete={onDeleteExpense}
-          />
+        <ExpenseList
+          expenses={filteredExpenses}
+          debitMethods={paymentMethods.filter((m) => m.type !== "credit")}
+          onEdit={onEditExpense}
+          onDelete={onDeleteExpense}
+          selectedMonth={selectedMonth}
+        />
         </div>
       </motion.div>
 
