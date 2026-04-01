@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { format, addMonths, subMonths, isSameMonth, isSameYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { API_URL } from "@/config";
 
 function CardDetails() {
   const { id } = useParams();
@@ -29,7 +30,7 @@ function CardDetails() {
   const fetchData = async () => {
     try {
       // user_id agora é obtido via sessão no backend
-      const methodsRes = await fetch(`http://localhost/api_financas/getPaymentMethods.php`, {
+      const methodsRes = await fetch(`${API_URL}/getPaymentMethods.php`, {
         credentials: "include",
       });
       const methodsData = await methodsRes.json();
@@ -41,7 +42,7 @@ function CardDetails() {
         }
       }
 
-      const expensesRes = await fetch(`http://localhost/api_financas/getExpenses.php`, {
+      const expensesRes = await fetch(`${API_URL}/getExpenses.php`, {
         credentials: "include",
       });
       const expensesData = await expensesRes.json();

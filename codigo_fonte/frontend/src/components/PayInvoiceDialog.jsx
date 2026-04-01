@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { API_URL } from "@/config";
 
 export default function PayInvoiceDialog({ open, onOpenChange, paymentMethods, onConfirmPayment }) {
   const [targetCardId, setTargetCardId] = useState("");
@@ -29,7 +30,7 @@ export default function PayInvoiceDialog({ open, onOpenChange, paymentMethods, o
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost/api_financas/getInvoiceTotal.php?user_id=${user.id}&card_id=${targetCardId}&month=${selectedMonth}&year=${selectedYear}`,
+        `${API_URL}/getInvoiceTotal.php?user_id=${user.id}&card_id=${targetCardId}&month=${selectedMonth}&year=${selectedYear}`,
         { credentials: "include" }
       );
       const data = await response.json();

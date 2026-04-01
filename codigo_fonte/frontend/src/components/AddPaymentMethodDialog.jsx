@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { API_URL } from "@/config";
 
 function AddPaymentMethodDialog({ open, onOpenChange, onAddPaymentMethod }) {
   const handleSubmit = async (e) => {
@@ -14,7 +15,7 @@ function AddPaymentMethodDialog({ open, onOpenChange, onAddPaymentMethod }) {
     const methodData = { name };
 
     try {
-      const response = await fetch("http://localhost/api_financas/addPaymentMethod.php", {
+      const response = await fetch(`${API_URL}/addPaymentMethod.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

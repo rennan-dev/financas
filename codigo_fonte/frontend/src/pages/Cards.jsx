@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { API_URL } from "@/config";
 
 const formatDate = (dateString) => {
   const dateObj = new Date(dateString.replace(" ", "T"));
@@ -39,7 +40,7 @@ function Cards() {
 
   const fetchPaymentMethods = () => {
     // user_id agora é obtido via sessão no backend
-    fetch(`http://localhost/api_financas/getPaymentMethods.php`, {
+    fetch(`${API_URL}/getPaymentMethods.php`, {
       method: "GET",
       credentials: "include",
     })
@@ -81,7 +82,7 @@ function Cards() {
 
   const handleConfirmDelete = () => {
     if (!selectedCard) return;
-    fetch(`http://localhost/api_financas/deletePaymentMethod.php?id=${selectedCard.id}`, {
+    fetch(`${API_URL}/deletePaymentMethod.php?id=${selectedCard.id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -128,7 +129,7 @@ function Cards() {
   const handleUpdateBalance = async (paymentMethodId, newBalance) => {
     // user_id agora é obtido via sessão no backend
     try {
-      const response = await fetch("http://localhost/api_financas/updateBalance.php", {
+      const response = await fetch(`${API_URL}/updateBalance.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

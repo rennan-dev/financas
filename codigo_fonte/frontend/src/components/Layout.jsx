@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserCircle } from "lucide-react";
+import { API_URL } from "@/config";
 
 function Layout({ children }) {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ function Layout({ children }) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost/api_financas/accounts/logout.php", {
+      const response = await fetch(`${API_URL}/accounts/logout.php`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

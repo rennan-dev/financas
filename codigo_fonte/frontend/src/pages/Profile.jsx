@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { API_URL } from "@/config";
 
 function Profile() {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("http://localhost/api_financas/accounts/profile.php", {
+        const response = await fetch(`${API_URL}/accounts/profile.php`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -54,7 +55,7 @@ function Profile() {
     }
 
     try {
-      const response = await fetch("http://localhost/api_financas/accounts/update_password.php", {
+      const response = await fetch(`${API_URL}/accounts/update_password.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -79,7 +80,7 @@ function Profile() {
 
   const handleDeleteAccount = async () => {
     try {
-      const response = await fetch("http://localhost/api_financas/accounts/delete_account.php", {
+      const response = await fetch(`${API_URL}/accounts/delete_account.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
