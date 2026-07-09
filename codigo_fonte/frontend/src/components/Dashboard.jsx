@@ -65,6 +65,7 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [showUpdateBalance, setShowUpdateBalance] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
+  const [evolutionView, setEvolutionView] = useState("months");
 
   // --- 1. FILTRO DO MÊS SELECIONADO ---
   const filteredExpenses = useMemo(() => {
@@ -165,6 +166,49 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
     }
     return data;
   }, [expenses, selectedMonth]);
+
+  // --- 4. DADOS PARA EVOLUÇÃO DIÁRIA (MÊS ESPECÍFICO) ---
+  const evolutionDataDaily = useMemo(() => {
+    const data = [];
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+    // Pega a quantidade de dias no mês selecionado
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      let credit = 0;
+      let debit = 0;
+      let deposit = 0;
+
+      // Usamos o filteredExpenses porque ele já está filtrado para o mês/ano selecionado
+      filteredExpenses.forEach(expense => {
+        const expenseDate = expense.installment_id ? expense.due_date : expense.expense_date; 
+        const dateObj = expenseDate instanceof Date ? expenseDate : new Date(expenseDate);
+        
+        // Se a despesa ocorreu no dia atual do loop, somamos
+        if (dateObj.getDate() === day) {
+          const valueStr = expense.installment_id ? expense.installment_amount : expense.total_amount;
+          const amount = parseFloat(typeof valueStr === "string" ? valueStr.replace(",", ".") : valueStr) || 0;
+
+          if (expense.payment_type === 'credit') {
+            credit += amount;
+          } else if (expense.payment_type === 'deposit') {
+            deposit += amount;
+          } else if (expense.payment_type === 'debit') {
+            debit += amount;
+          }
+        }
+      });
+
+      data.push({ 
+        name: `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}`, 
+        Crédito: credit,
+        Débito: debit,
+        Depósito: deposit
+      });
+    }
+    return data;
+  }, [filteredExpenses, selectedMonth]);
 
   const colorMapping = {
       "Crédito": "#00C49F",  // Verde Água
@@ -309,10 +353,41 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
         transition={{ delay: 0.1 }}
         className="w-full p-6 rounded-2xl bg-card border border-border shadow-md"
       >
-        <h2 className="text-sm font-medium text-muted-foreground">Evolução de Gastos</h2>
-          <div className="h-[250px] w-full">
+        {/* CABEÇALHO COM TOGGLE */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-medium text-muted-foreground">Evolução de Gastos</h2>
+          
+          <div className="flex bg-secondary/50 p-1 rounded-lg border border-border/50">
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                evolutionView === 'months' 
+                  ? 'bg-background shadow-sm text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setEvolutionView('months')}
+            >
+              6 Meses
+            </button>
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                evolutionView === 'month' 
+                  ? 'bg-background shadow-sm text-foreground' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setEvolutionView('month')}
+            >
+              Mês Selecionado
+            </button>
+          </div>
+        </div>
+
+        <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={evolutionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <LineChart 
+              // Alterna os dados baseados no Toggle
+              data={evolutionView === 'months' ? evolutionData : evolutionDataDaily} 
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
               <XAxis 
                 dataKey="name" 
@@ -320,6 +395,8 @@ function Dashboard({ expenses, paymentMethods, totalBalance, onUpdateBalance, on
                 tickLine={false} 
                 tick={{ fill: '#6b7280', fontSize: 12 }} 
                 dy={10}
+                // minTickGap ajuda a não encavalar as datas quando tiver 31 dias no gráfico
+                minTickGap={15} 
               />
               <YAxis 
                 axisLine={false} 
